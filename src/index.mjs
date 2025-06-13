@@ -2,6 +2,7 @@ import { serverConfig } from './data/serverConfig.mjs'
 import { DeployAdvanced } from 'flowmcpServers'
 import express from 'express'
 import crypto from 'crypto'
+import { exec } from 'child_process';
 
 
 class CommunityServer {
@@ -16,44 +17,64 @@ class CommunityServer {
     }
 
 
-    static #addWebhook( { app, webhookSecret, pm2Name } ) {
-        console.log( 'Webhook secret:', webhookSecret )
-        function verifySignature( { req, body, webhookSecret } ) {
+    static #addWebhook({ app, webhookSecret, pm2Name }) {
+        console.log('Webhook secret:', webhookSecret);
 
-            const signature = req.headers['x-hub-signature-256']
-            const hmac = crypto.createHmac( 'sha256', webhookSecret )
-            const digest = 'sha256=' + hmac.update( body ).digest( 'hex' )
-            return signature === digest
+        // Middleware: Nur /webhook als raw behandeln
+        app.use('/webhook', express.raw({ type: 'application/json' }));
+
+        // Signaturprüfung
+        function verifySignature({ req, webhookSecret }) {
+            const signature = req.headers['x-hub-signature-256'];
+            if (!signature) {
+                console.warn('Missing signature header');
+                return false;
+            }
+
+            const hmac = crypto.createHmac('sha256', webhookSecret);
+            const digest = 'sha256=' + hmac.update(req.body).digest('hex');
+            return signature === digest;
         }
 
-        app.use( '/webhook', express.raw( { type: '*/*' } ) )
-        app.post( '/webhook', ( req, res ) => {
-            const body = req.body
-
-            if( !verifySignature( { req, body, webhookSecret } ) ) {
-                return res.status( 403 ).send( 'Invalid signature' )
+        app.post('/webhook', (req, res) => {
+            // Signatur prüfen
+            if (!verifySignature({ req, webhookSecret })) {
+                console.warn('Invalid signature');
+                return res.status(403).send('Invalid signature');
             }
 
-            const payload = JSON.parse( body.toString() )
-            if( payload.ref === 'refs/heads/main' ) {
-                    exec(`
-                        git pull origin main &&
-                        npm install &&
-                        pm2 restart ${pm2Name}
-                    `, ( err, stdout, stderr ) => {
-                    if( err ) {
-                        console.error( 'Deploy error:', stderr )
-                        return res.status( 500 ).send( 'Deployment failed' )
+            let payload;
+            try {
+                payload = JSON.parse(req.body.toString());
+            } catch (e) {
+                console.error('Failed to parse JSON payload:', e);
+                return res.status(400).send('Invalid JSON');
+            }
+
+            console.log('Received GitHub event:', req.headers['x-github-event']);
+            console.log('Payload ref:', payload.ref);
+
+            if (payload.ref === 'refs/heads/main') {
+                console.log('Triggering deployment...');
+
+                exec(
+                    `git pull origin main && npm install && pm2 restart ${pm2Name}`,
+                    (err, stdout, stderr) => {
+                        if (err) {
+                            console.error('Deploy error:', stderr);
+                            return res.status(500).send('Deployment failed');
+                        }
+
+                        console.log('Deployment output:', stdout);
+                        res.status(200).send('Deployment triggered');
                     }
-                    console.log( 'Deployment output:', stdout )
-                    res.status( 200 ).send( 'Deployment triggered' )
-                } )
+                );
             } else {
-                res.status( 200 ).send( 'No action needed' )
+                res.status(200).send('No action needed');
             }
-        } )
+        });
 
-        return true
+        return true;
     }
 
 
