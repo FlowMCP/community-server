@@ -31,6 +31,7 @@ class ServerManager {
         const result = this
             .#loadEnv( { stageType } )
             .split( "\n" )
+            .filter( line => line && !line.startsWith( '#' ) && line.includes( '=' ) )
             .map( line => line.split( '=' ) )
             .reduce( ( acc, [ k, v ] ) => {
                 const find = selection.find( ( [ key, _ ] ) => key === k )
