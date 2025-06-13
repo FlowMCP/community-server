@@ -1,13 +1,14 @@
 import { serverConfig } from './data/serverConfig.mjs'
 import { DeployAdvanced } from 'flowmcpServers'
 import express from 'express'
+import crypto from 'crypto'
 
 
 class CommunityServer {
-    static start( { silent, arrayOfSchemas, serverConfig, envObject, webhookSecret } ) {
+    static start( { silent, arrayOfSchemas, serverConfig, envObject, webhookSecret, pm2Name } ) {
         const { serverType, app, mcps, events, argv } = DeployAdvanced
             .init( { silent, arrayOfSchemas, serverConfig, envObject } )
-        this.#addWebhook( { app, webhookSecret } )
+        this.#addWebhook( { app, webhookSecret, pm2Name } )
         this.#addLandingPage( { app } )
 
         DeployAdvanced.start()
@@ -15,8 +16,10 @@ class CommunityServer {
     }
 
 
-    static #addWebhook( { app, webhookSecret } ) {
+    static #addWebhook( { app, webhookSecret, pm2Name } ) {
+        console.log( 'Webhook secret:', webhookSecret )
         function verifySignature( { req, body, webhookSecret } ) {
+
             const signature = req.headers['x-hub-signature-256']
             const hmac = crypto.createHmac( 'sha256', webhookSecret )
             const digest = 'sha256=' + hmac.update( body ).digest( 'hex' )
@@ -36,7 +39,7 @@ class CommunityServer {
                     exec(`
                         git pull origin main &&
                         npm install &&
-                        pm2 restart my-app
+                        pm2 restart ${pm2Name}
                     `, ( err, stdout, stderr ) => {
                     if( err ) {
                         console.error( 'Deploy error:', stderr )
