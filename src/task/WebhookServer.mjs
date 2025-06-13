@@ -68,7 +68,7 @@ class WebhookServer {
             const ref = `${payload?.release?.tag_name || ''}`.trim()
             if ( ref.startsWith( 'refs/tags/' ) ) {
                 console.log('📦 New release published:', payload.release?.tag_name);
-
+ 
                 exec(
                     `git pull origin main && npm install && pm2 restart ${pm2Name}`, 
                     ( err, stdout, stderr ) => {
