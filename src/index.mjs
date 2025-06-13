@@ -109,7 +109,8 @@ class ServerManager {
 
         const envFile = fs
             .readFileSync( path, 'utf-8' )
-
+console.log( `Loaded environment file: ${path}` )
+console.log( `Environment variables: ${envFile}` )
         return envFile
     }
 }
