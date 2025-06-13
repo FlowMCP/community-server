@@ -72,6 +72,7 @@ class ServerManager {
         const envObject = this
             .#loadEnv( { stageType } )
             .split( "\n" )
+            .filter( line => line && !line.startsWith( '#' ) && line.includes( '=' ) )
             .map( line => line.split( '=' ) )
             .reduce( ( acc, [ k, v ] ) => {
                 acc[ k ] = v.trim()
