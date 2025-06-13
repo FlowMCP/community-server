@@ -1,5 +1,5 @@
 import { CommunityServer } from './src/index.mjs'
-import { SchemaImporter } from 'schemaimporter'
+import { SchemaImporter } from 'schemaImporter'
 import { serverConfig } from './src/data/serverConfig.mjs'
 
 
