@@ -26,6 +26,7 @@ class WebhookServer {
             console.log( '✅ Webhook received' )
 
             const signature = req.headers['x-hub-signature-256']
+
             if( !signature || !Buffer.isBuffer( req.body ) ) {
                 console.warn( '❌ Signature missing or body is not a Buffer' )
                 return res.status( 400 ).send( 'Invalid request' )
@@ -59,8 +60,9 @@ class WebhookServer {
             console.log( `📩 GitHub event: ${event}` )
             console.log( `🎯 Ref: ${payload.ref}` )
 
-            if( event === 'push' && payload.ref === 'refs/heads/main' ) {
-                console.log( '🚀 Triggering deployment...' )
+            if (event === 'release' && payload.action === 'published') {
+                console.log('📦 New release published:', payload.release?.tag_name);
+
                 exec(
                     `git pull origin main && npm install && pm2 restart ${pm2Name}`, 
                     ( err, stdout, stderr ) => {
