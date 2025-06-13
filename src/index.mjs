@@ -1,5 +1,9 @@
 import { CommunityServer } from './task/CommunityServer.mjs'
 import { WebhookServer } from './task/WebhookServer.mjs'
+import { serverConfig } from './data/serverConfig.mjs'
+import { config } from './data/config.mjs'
+
+
 import fs from 'fs'
 
 
@@ -15,7 +19,7 @@ class ServerManager {
     }
 
 
-    static getWebhookEnv( { path='.example.env' }={} ) {
+    static getWebhookEnv( { stageType } ) {
         const { selection } = {
             'selection': [
                 [ 'WEBHOOK_SECRET', 'webhookSecret' ],
@@ -24,8 +28,8 @@ class ServerManager {
             ]
         }
 
-        const result = fs
-            .readFileSync( path, 'utf-8' )
+        const result = this
+            .#loadEnv( { stageType } )
             .split( "\n" )
             .map( line => line.split( '=' ) )
             .reduce( ( acc, [ k, v ] ) => {
@@ -45,9 +49,27 @@ class ServerManager {
     }
 
 
-    static getEnvObject( { path='.example.env' }={} ) {
-        const envObject = fs
-            .readFileSync( path, 'utf-8' )
+    static getServerConfig( { envObject } ) {
+        const _new = { ...serverConfig }
+        _new['routes'] = _new['routes']
+            .map( ( route, index ) => {
+                const search = `BEARER_TOKEN__${index}`
+                const value = envObject[ search ]
+                if( !value ) {
+                    console.warn( `Missing ${search} in .env file` )
+                    return route
+                }
+               route['bearerToken'] = value
+                return route
+            } )
+
+        return { serverConfig: _new  }
+    }
+
+
+    static getEnvObject( { stageType }) {
+        const envObject = this
+            .#loadEnv( { stageType } )
             .split( "\n" )
             .map( line => line.split( '=' ) )
             .reduce( ( acc, [ k, v ] ) => {
@@ -73,7 +95,22 @@ class ServerManager {
             return { stageType: 'development' }
         }
         const stageType = finding.split( '=' )[ 1 ].trim()
+        console.log( `Stage type: ${stageType}` )
         return { stageType }
+    }
+
+
+    static #loadEnv( { stageType } ) {
+        const path = config['env'][ stageType ]
+        if( !path ) {
+            console.error( `No environment file found for stage type: ${stageType}` )
+            return false
+        }
+
+        const envFile = fs
+            .readFileSync( path, 'utf-8' )
+
+        return envFile
     }
 }
 

@@ -1,11 +1,13 @@
 import { ServerManager } from './src/index.mjs'
 import { SchemaImporter } from 'schemaImporter'
-import { serverConfig } from './src/data/serverConfig.mjs'
+
 
 const { stageType } = ServerManager
     .getStageType( { 'argvs': process.argv} )
 const { envObject } = ServerManager
     .getEnvObject( { stageType } )
+const { serverConfig } = ServerManager
+    .getServerConfig( { envObject } )
 const { webhookSecret, webhookPort, pm2Name } = ServerManager
     .getWebhookEnv( { stageType } )
 const { managerVersion } = ServerManager
@@ -18,7 +20,7 @@ const arrayOfSchemas = await SchemaImporter
         addAdditionalMetaData: true,
         outputType: 'onlySchema'
     } )
-
+ 
 ServerManager
     .start( {
         silent: false,
