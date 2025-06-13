@@ -5,6 +5,7 @@ import fs from 'fs'
 
 class ServerManager {
     static start( { silent, arrayOfSchemas, serverConfig, envObject, managerVersion, webhookSecret, webhookPort, pm2Name } ) {
+        console.log( 'ServerManager initialized:', managerVersion )
         CommunityServer
             .start( { silent, arrayOfSchemas, serverConfig, envObject, pm2Name, managerVersion } )
         WebhookServer
