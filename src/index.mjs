@@ -30,7 +30,7 @@ class ServerManager {
             .map( line => line.split( '=' ) )
             .reduce( ( acc, [ k, v ] ) => {
                 const find = selection.find( ( [ key, _ ] ) => key === k )
-                if( find ) {  acc[ find[ 1 ] ] = v.trim()  }
+                if( find ) { acc[ find[ 1 ] ] = v.trim() }
                 return acc
             }, {} )
 
@@ -66,7 +66,6 @@ class ServerManager {
 
 
     static getStageType( { argvs } ) {
-
         const finding = argvs
             .find( arg => arg.startsWith( '--stage=' ) )
         if( !finding ) {
