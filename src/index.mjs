@@ -8,6 +8,8 @@ class CommunityServer {
         const { serverType, app, mcps, events, argv } = DeployAdvanced
             .init( { silent, arrayOfSchemas, serverConfig, envObject } )
         this.#addWebhook( { app, webhookSecret } )
+        this.#addLandingPage( { app } )
+
         DeployAdvanced.start()
         return true
     }
@@ -48,6 +50,14 @@ class CommunityServer {
             }
         } )
 
+        return true
+    }
+
+
+    static #addLandingPage( { app } ) {
+        app.get( '/', ( req, res ) => {
+            res.send( '<h1>Welcome to the Community Server</h1>' )
+        } )
         return true
     }
 }
