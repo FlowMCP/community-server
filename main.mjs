@@ -17,5 +17,6 @@ CommunityServer
         arrayOfSchemas,
         serverConfig,
         envObject: {},
-        webhookSecret: 'test'
+        webhookSecret: 'test',
+        pm2Name: 'community-server'
     } )
