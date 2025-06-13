@@ -1,7 +1,14 @@
-import { CommunityServer } from './src/index.mjs'
+import { ServerManager } from './src/index.mjs'
 import { SchemaImporter } from 'schemaImporter'
 import { serverConfig } from './src/data/serverConfig.mjs'
 
+
+const { envObject } = ServerManager
+    .getEnvObject()
+const { webhookSecret, webhookPort, pm2Name } = ServerManager
+    .getWebhookEnv()
+const { managerVersion } = ServerManager
+    .getPackageVersion()
 
 const arrayOfSchemas = await SchemaImporter
     .loadFromFolder( {
@@ -11,12 +18,14 @@ const arrayOfSchemas = await SchemaImporter
         outputType: 'onlySchema'
     } )
 
-CommunityServer
+ServerManager
     .start( {
         silent: false,
         arrayOfSchemas,
         serverConfig,
-        envObject: {},
-        webhookSecret: 'test',
-        pm2Name: 'community-server'
+        envObject,
+        webhookSecret,
+        webhookPort,
+        pm2Name,
+        managerVersion
     } )

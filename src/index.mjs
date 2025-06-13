@@ -1,102 +1,69 @@
-import { serverConfig } from './data/serverConfig.mjs'
-import { DeployAdvanced } from 'flowmcpServers'
-import express from 'express'
-import crypto from 'crypto'
-import { exec } from 'child_process';
+import { CommunityServer } from './task/CommunityServer.mjs'
+import { WebhookServer } from './task/WebhookServer.mjs'
+import fs from 'fs'
 
 
-class CommunityServer {
-    static start( { silent, arrayOfSchemas, serverConfig, envObject, webhookSecret, pm2Name } ) {
-        const { serverType, app, mcps, events, argv } = DeployAdvanced
-            .init( { silent, arrayOfSchemas, serverConfig, envObject } )
-        this.#addWebhook( { app, webhookSecret, pm2Name } )
-        this.#addLandingPage( { app } )
+class ServerManager {
+    static start( { silent, arrayOfSchemas, serverConfig, envObject, managerVersion, webhookSecret, webhookPort, pm2Name } ) {
+        CommunityServer
+            .start( { silent, arrayOfSchemas, serverConfig, envObject, pm2Name, managerVersion } )
+        WebhookServer
+            .start( { webhookSecret, webhookPort, pm2Name, managerVersion } )
 
-        DeployAdvanced.start()
         return true
     }
 
 
-    static #addWebhook({ app, webhookSecret, pm2Name }) {
-        console.log('🔒 Webhook setup started. PM2 process:', pm2Name);
-
-        // Middleware: Nur /webhook als raw behandeln (für Signaturprüfung)
-        app.use('/webhook', express.raw({ type: 'application/json' }));
-
-        // Signaturprüfung via HMAC SHA-256
-        function verifySignature(req, secret) {
-            const signature = req.headers['x-hub-signature-256'];
-            if (!signature) {
-                console.warn('⚠️ Missing signature header');
-                return false;
-            }
-
-            try {
-                const hmac = crypto.createHmac('sha256', secret);
-                const digest = 'sha256=' + hmac.update(req.body).digest('hex');
-                return signature === digest;
-            } catch (e) {
-                console.error('❌ Signature verification error:', e);
-                return false;
-            }
+    static getWebhookEnv( { path='.example.env' }={} ) {
+        const { selection } = {
+            'selection': [
+                [ 'WEBHOOK_SECRET', 'webhookSecret' ],
+                [ 'WEBHOOK_PORT', 'webhookPort' ],
+                [ 'PM2_NAME', 'pm2Name' ],
+            ]
         }
 
-        // Webhook-Endpunkt
-        app.post('/webhook', (req, res) => {
-            if (!verifySignature(req, webhookSecret)) {
-                return res.status(403).send('Invalid signature');
-            }
+        const result = fs
+            .readFileSync( path, 'utf-8' )
+            .split( "\n" )
+            .map( line => line.split( '=' ) )
+            .reduce( ( acc, [ k, v ] ) => {
+                const find = selection.find( ( [ key, _ ] ) => key === k )
+                if( find ) {  acc[ find[ 1 ] ] = v.trim()  }
+                return acc
+            }, {} )
 
-            let payload;
-            try {
-                payload = JSON.parse(req.body.toString());
-            } catch (e) {
-                console.error('❌ Failed to parse JSON payload:', e);
-                return res.status(400).send('Invalid JSON');
-            }
+        selection
+            .forEach( ( row ) => {
+                const [ _, value ] = row
+                if( !result[ value ]  ) { console.log( `Missing ${key} in .env file` ) } 
+                return true
+            } )
 
-            const event = req.headers['x-github-event'];
-            console.log(`📩 Received GitHub event: ${event}`);
-
-            // Ping-Event separat behandeln
-            if (event === 'ping') {
-                return res.status(200).send('Ping received');
-            }
-
-            // Nur auf Pushs an main reagieren
-            if (event === 'push' && payload.ref === 'refs/heads/main') {
-                console.log('🚀 Triggering deployment...');
-
-                exec(
-                    `git pull origin main && npm install && pm2 restart ${pm2Name}`,
-                    (err, stdout, stderr) => {
-                        if (err) {
-                            console.error('❌ Deployment error:', stderr);
-                            return res.status(500).send('Deployment failed');
-                        }
-
-                        console.log('✅ Deployment successful:\n', stdout);
-                        return res.status(200).send('Deployment triggered');
-                    }
-                );
-            } else {
-                console.log('ℹ️ No action needed for this event or branch:', payload.ref);
-                res.status(200).send('No action needed');
-            }
-        });
-
-        return true;
+        return result
     }
 
 
-    static #addLandingPage( { app } ) {
-        app.get( '/', ( req, res ) => {
-            res.send( '<h1>Welcome to the Community Server v.0.0.1</h1>' )
-        } )
-        return true
+    static getEnvObject( { path='.example.env' }={} ) {
+        const envObject = fs
+            .readFileSync( path, 'utf-8' )
+            .split( "\n" )
+            .map( line => line.split( '=' ) )
+            .reduce( ( acc, [ k, v ] ) => {
+                acc[ k ] = v.trim()
+                return acc
+            }, {} )
+
+        return { envObject }
+    }
+
+
+    static getPackageVersion() {
+        const { version: managerVersion } = JSON.parse( fs.readFileSync( './package.json', 'utf-8' ) )
+        return { managerVersion }
     }
 }
 
 
-export { CommunityServer }
+export { ServerManager }
 

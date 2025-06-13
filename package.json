@@ -1,8 +1,8 @@
 {
   "name": "6-community-server",
-  "version": "1.0.0",
+  "version": "0.0.2",
   "description": "",
-  "main": "main.js",  
+  "main": "main.js",
   "scripts": {
     "inspector": "npx @modelcontextprotocol/inspector"
   },
@@ -12,8 +12,9 @@
   "type": "commonjs",
   "dependencies": {
     "@modelcontextprotocol/inspector": "^0.13.0",
-    "schemaImporter": "github:flowmcp/flowMCP-schemas#3d378b3a61452126c833d667a9189ca578813c48", 
-    "flowmcpServers": "github:flowmcp/flowMCP-servers#0c3c15d41ded418ad70d84d0ee267009e262af29"
+    "flowmcpServers": "github:flowmcp/flowMCP-servers#0c3c15d41ded418ad70d84d0ee267009e262af29",
+    "raw-body": "^3.0.0",
+    "schemaImporter": "github:flowmcp/flowMCP-schemas#3d378b3a61452126c833d667a9189ca578813c48"
   },
   "devDependencies": {
     "@modelcontextprotocol/inspector": "^0.13.0"
