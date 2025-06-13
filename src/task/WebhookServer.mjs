@@ -65,11 +65,8 @@ class WebhookServer {
             console.log('🧪 payload.ref:', payload?.ref);
             console.log('📦 New release published:', payload?.release?.tag_name);
  
-
-            if (
-                (event === 'release' && payload.action === 'published') ||
-                (event === 'push' && payload.ref?.startsWith('refs/tags/'))
-            ) {
+            const ref = `${payload?.release?.tag_name || ''}`.trim()
+            if ( ref.startsWith( 'refs/tags/' ) ) {
                 console.log('📦 New release published:', payload.release?.tag_name);
 
                 exec(
