@@ -91,7 +91,7 @@ class CommunityServer {
 
     static #addLandingPage( { app } ) {
         app.get( '/', ( req, res ) => {
-            res.send( '<h1>Welcome to the Community Server</h1>' )
+            res.send( '<h1>Welcome to the Community Server v.0.0.1</h1>' )
         } )
         return true
     }
