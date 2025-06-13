@@ -2,11 +2,12 @@ import { ServerManager } from './src/index.mjs'
 import { SchemaImporter } from 'schemaImporter'
 import { serverConfig } from './src/data/serverConfig.mjs'
 
-
+const { stageType } = ServerManager
+    .getStageType( { 'argvs': process.argv} )
 const { envObject } = ServerManager
-    .getEnvObject()
+    .getEnvObject( { stageType } )
 const { webhookSecret, webhookPort, pm2Name } = ServerManager
-    .getWebhookEnv()
+    .getWebhookEnv( { stageType } )
 const { managerVersion } = ServerManager
     .getPackageVersion()
 

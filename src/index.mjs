@@ -63,6 +63,19 @@ class ServerManager {
         const { version: managerVersion } = JSON.parse( fs.readFileSync( './package.json', 'utf-8' ) )
         return { managerVersion }
     }
+
+
+    static getStageType( { argvs } ) {
+
+        const finding = argvs
+            .find( arg => arg.startsWith( '--stage=' ) )
+        if( !finding ) {
+            console.warn( 'No stage type provided, defaulting to "development"' )
+            return { stageType: 'development' }
+        }
+        const stageType = finding.split( '=' )[ 1 ].trim()
+        return { stageType }
+    }
 }
 
 
