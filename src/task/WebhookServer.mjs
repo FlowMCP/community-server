@@ -66,25 +66,28 @@ class WebhookServer {
             console.log('📦 New release published:', payload?.release?.tag_name);
  
             const ref = `${payload?.release?.tag_name || ''}`.trim()
-            if ( ref.startsWith( 'refs/tags/' ) ) {
-                console.log('📦 New release published:', payload.release?.tag_name);
- 
-                exec(
-                    `git pull origin main && npm install && pm2 restart ${pm2Name}`, 
-                    ( err, stdout, stderr ) => {
-                        if( err ) {
-                            console.error( '❌ Deploy failed:', stderr )
-                            return res.status( 500 ).send( 'Deployment failed' )
-                        }
+if (
+    (event === 'release' && payload?.action === 'published') ||
+    (event === 'push' && payload?.ref?.startsWith('refs/tags/'))
+) {
+    console.log('🚀 Detected release or tag push — triggering deployment...');
 
-                        console.log( '✅ Deploy successful:\n', stdout )
-                        return res.status( 200 ).send( 'Deployment triggered' )
-                    } 
-                )
-            } else {
-                console.log( 'ℹ️ No action for this event/ref.' )
-                return res.status( 200 ).send( 'No action needed' )
+    exec(
+        `git pull origin main && npm install && pm2 restart ${pm2Name}`,
+        (err, stdout, stderr) => {
+            if (err) {
+                console.error('❌ Deploy failed:', stderr);
+                return res.status(500).send('Deployment failed');
             }
+
+            console.log('✅ Deploy successful:\n', stdout);
+            return res.status(200).send('Deployment triggered');
+        }
+    );
+} else {
+    console.log('ℹ️ No action for this event/ref.');
+    return res.status(200).send('No action needed');
+}
         } )
     }
 }
