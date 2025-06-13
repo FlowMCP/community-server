@@ -59,7 +59,13 @@ class WebhookServer {
             const event = req.headers['x-github-event']
             console.log( `📩 GitHub event: ${event}` )
             console.log( `🎯 Ref: ${payload.ref}` )
-console.log( JSON.stringify( payload, null, 2 ) )
+
+            console.log('🧪 payload.action:', payload?.action);
+            console.log('🧪 payload.release?.tag_name:', payload?.release?.tag_name);
+            console.log('🧪 payload.ref:', payload?.ref);
+            console.log('📦 New release published:', payload?.release?.tag_name);
+
+
             if (
                 (event === 'release' && payload.action === 'published') ||
                 (event === 'push' && payload.ref?.startsWith('refs/tags/'))
