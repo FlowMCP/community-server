@@ -14,8 +14,8 @@
   "type": "commonjs",
   "dependencies": {
     "@modelcontextprotocol/inspector": "^0.13.0",
-    "@pinata/sdk": "^2.1.0",
     "flowmcpServers": "github:flowmcp/flowMCP-servers#cf69a860f7d1e2c0c3ef79de5efb41c4af5b65c1",
+    "pinata": "^2.4.8",
     "raw-body": "^3.0.0",
     "schemaImporter": "github:flowmcp/flowMCP-schemas#5cc6b664dd9fba48f2ccb0d36b1d90d8c0015f9c",
     "x402-mcp-middleware": "github:flowmcp/x402-mcp-middleware#7f2616236df83d19bacb8014e1ea00b15dfe8cd7"
