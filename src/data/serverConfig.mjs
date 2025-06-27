@@ -6,7 +6,7 @@ const serverConfig = {
     'config': {},
     'routes': [
         {
-            "name": "x402 - Experimental Payment MCP Server",
+            "name": "AgentPays - MCP with M2M Payment",
             "description": "Experimental server for x402 payments using USDC on Base Sepolia. Offers payment functionality for Model Context Payment (MCP) via 'exact' scheme (EIP-3009). Use with MCP Inspector or Proxy-enabled x402 clients. More info: https://github.com/FlowMCP/x402-experiments",
             'bearerIsPublic': true,
             'routePath': '/x402',
