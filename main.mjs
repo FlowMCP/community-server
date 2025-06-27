@@ -23,7 +23,7 @@ const arrayOfSchemas = await SchemaImporter
         excludeSchemasWithRequiredServerParams: true,
         addAdditionalMetaData: true,
         outputType: 'onlySchema'
-    } )
+    } ) 
 arrayOfSchemas.push( pinataWrite )
 
 await ServerManager
