@@ -1,4 +1,4 @@
-import { PinataSDK } from "pinata";
+import { PinataSDK } from "pinata"
 
 
 const schema = {
