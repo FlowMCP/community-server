@@ -1,6 +1,6 @@
 const config = {
     'env': {
-        'development': './.example.env',
+        'development': './../.community.env',
         'production': './../.env'
     }
 }

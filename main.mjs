@@ -1,6 +1,8 @@
 import { ServerManager } from './src/index.mjs'
 import { SchemaImporter } from 'schemaImporter'
 
+import { schema as pinataWrite } from './custom-schemas/pinata/write.mjs'
+
 
 const { stageType } = ServerManager
     .getStageType( { 'argvs': process.argv} )
@@ -8,6 +10,8 @@ const { envObject } = ServerManager
     .getEnvObject( { stageType } )
 const { serverConfig } = ServerManager
     .getServerConfig( { envObject } )
+const { x402Config, x402Credentials, x402PrivateKey } = ServerManager
+    .getX402Credentials( { envObject } )
 const { webhookSecret, webhookPort, pm2Name } = ServerManager
     .getWebhookEnv( { stageType } )
 const { managerVersion } = ServerManager
@@ -20,8 +24,10 @@ const arrayOfSchemas = await SchemaImporter
         addAdditionalMetaData: true,
         outputType: 'onlySchema'
     } )
- 
-ServerManager
+arrayOfSchemas.push( pinataWrite )
+
+
+await ServerManager
     .start( {
         silent: false,
         arrayOfSchemas,
@@ -30,5 +36,8 @@ ServerManager
         webhookSecret,
         webhookPort,
         pm2Name,
-        managerVersion
+        managerVersion,
+        x402Config,
+        x402Credentials,
+        x402PrivateKey
     } )

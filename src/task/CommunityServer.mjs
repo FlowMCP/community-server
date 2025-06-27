@@ -1,19 +1,23 @@
 import { DeployAdvanced } from 'flowmcpServers'
+import { X402Middleware } from 'x402-mcp-middleware'
+
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __filename = fileURLToPath( import.meta.url )
+const __dirname = path.dirname( __filename )
+
 
 class CommunityServer {
-    static start({ silent, arrayOfSchemas, serverConfig, envObject, managerVersion }) {
-        const { serverType, app, mcps, events, argv } = DeployAdvanced.init({
-            silent,
-            arrayOfSchemas,
-            serverConfig,
-            envObject
-        })
+    static async start( { silent, arrayOfSchemas, serverConfig, envObject, managerVersion, x402Config, x402Credentials, x402PrivateKey } ) {
+        const { serverType, app, mcps, events, argv } = DeployAdvanced
+            .init( { silent, arrayOfSchemas, serverConfig, envObject, x402Config, x402Credentials, x402PrivateKey } )
+
+        const { chainId, chainName, contracts, paymentOptions, restrictedCalls } = x402Config
+        const middleware = await X402Middleware
+            .create( { chainId, chainName, contracts, paymentOptions, restrictedCalls, x402Credentials, x402PrivateKey } )
+        app.use( ( await middleware ).mcp() )
 
         const { landingPage: { name, description }, routes } = serverConfig
 
@@ -33,6 +37,9 @@ class CommunityServer {
                 const { name, description, routePath, urlSse, bearer } = route
                 this.#addLRouteLandingPage( { app, routePath, name, description, urlSse, bearer  } )
             } )
+
+        DeployAdvanced
+            .addRoutes( { serverConfig, arrayOfSchemas, envObject } )
 
         DeployAdvanced.start()
         return true
@@ -95,4 +102,4 @@ class CommunityServer {
 }
 
 
-export { CommunityServer}
+export { CommunityServer }

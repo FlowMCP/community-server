@@ -8,10 +8,9 @@ import fs from 'fs'
 
 
 class ServerManager {
-    static start( { silent, arrayOfSchemas, serverConfig, envObject, managerVersion, webhookSecret, webhookPort, pm2Name } ) {
-        console.log( 'ServerManager initialized:', managerVersion )
-        CommunityServer
-            .start( { silent, arrayOfSchemas, serverConfig, envObject, pm2Name, managerVersion } )
+    static async start( { silent, arrayOfSchemas, serverConfig, envObject, managerVersion, webhookSecret, webhookPort, pm2Name, x402Config, x402Credentials, x402PrivateKey } ) {
+        await CommunityServer
+            .start( { silent, arrayOfSchemas, serverConfig, envObject, pm2Name, managerVersion, x402Config, x402Credentials, x402PrivateKey } )
         WebhookServer
             .start( { webhookSecret, webhookPort, pm2Name, managerVersion } )
 
@@ -47,6 +46,50 @@ class ServerManager {
             } )
 
         return result
+    }
+
+
+    static getX402Credentials( { envObject } ) {
+        const messages = []
+
+        const { envSelection } = serverConfig['x402']
+        const selection = envSelection
+            .reduce( ( acc, select ) => {
+                const [ varName, envKey ] = select
+                if( Array.isArray( envKey ) ) {
+                    acc[ varName ] = envKey
+                        .map( key => {
+                            const item = envObject[ key ]
+                            if ( item === undefined ) {
+                                messages.push( `Missing environment variable: ${key}` )
+                            }
+                            return item
+                        } )
+                } else {
+                    acc[ varName ] = envObject[ envKey ]
+                }
+                return acc
+            }, {} )
+
+        if( messages.length > 0 ) {
+            throw new Error( `Environment loading failed: ${ messages.join( ', ' ) }` )
+        }
+
+        const { x402Credentials, x402PrivateKey } = Object
+            .entries( selection )
+            .reduce( ( acc, [ key, value ] ) => {
+                if( key.toLowerCase().includes( 'privatekey' ) ) {
+                    if( acc['x402PrivateKey'] !== null ) { console.warn( `Multiple private keys found, using the first one` ); return acc }
+                    acc['x402PrivateKey'] = value
+                } else {
+                    acc['x402Credentials'][ key ] = value
+                }
+                return acc
+            }, { 'x402Credentials': {}, 'x402PrivateKey': null } )
+
+        const x402Config = serverConfig['x402']
+
+        return { x402Config, x402Credentials, x402PrivateKey }
     }
 
 
@@ -111,8 +154,7 @@ class ServerManager {
 
         const envFile = fs
             .readFileSync( path, 'utf-8' )
-console.log( `Loaded environment file: ${path}` )
-console.log( `Environment variables: ${envFile}` )
+
         return envFile
     }
 }
