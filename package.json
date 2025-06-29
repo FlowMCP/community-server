@@ -1,6 +1,6 @@
 {
   "name": "6-community-server",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "",
   "main": "main.js",
   "scripts": {
@@ -14,13 +14,13 @@
   "type": "commonjs",
   "dependencies": {
     "@modelcontextprotocol/inspector": "^0.13.0",
-    "flowmcpServers": "github:flowmcp/flowMCP-servers#cf69a860f7d1e2c0c3ef79de5efb41c4af5b65c1",
+    "flowmcpServers": "github:flowmcp/flowMCP-servers#52ccc292c0ab03bed2d54d7e6129e017ae4b1c03",
     "pinata": "^2.4.8",
     "raw-body": "^3.0.0",
     "schemaImporter": "github:flowmcp/flowMCP-schemas#5cc6b664dd9fba48f2ccb0d36b1d90d8c0015f9c",
     "x402-mcp-middleware": "github:flowmcp/x402-mcp-middleware#7f2616236df83d19bacb8014e1ea00b15dfe8cd7"
   },
   "devDependencies": {
-    "@modelcontextprotocol/inspector": "^0.13.0"
+    "@modelcontextprotocol/inspector": "^0.14.3"
   }
 }

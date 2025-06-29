@@ -11,24 +11,22 @@ const serverConfig = {
             'bearerIsPublic': true,
             'routePath': '/x402',
             'bearerToken': 'hal-finney',
-            'transportProtocols': [ 'sse' ],
+            'protocol': 'sse',
             'includeNamespaces': [ 'x402', 'pinata' ],
             'excludeNamespaces': [],
             'activateTags': []
-        }
-/*
+        },
         {
             'name': 'LUKSO Network - Community MCP Server',
             'description': 'Provides access to the LUKSO Network for search and redirect functionality on mainnet and testnet.',
             'bearerIsPublic': true,
             'routePath': '/lukso',
             'bearerToken': '1234',
-            'transportProtocols': [ 'sse' ],
+            'protocol': 'sse',
             'includeNamespaces': [ 'luksoNetwork' ],
             'excludeNamespaces': [],
             'activateTags': [],
         }
-*/
     ],
     'x402': {
         'chainId': 84532,

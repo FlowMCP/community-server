@@ -25,7 +25,6 @@ const arrayOfSchemas = await SchemaImporter
         outputType: 'onlySchema'
     } ) 
 arrayOfSchemas.push( pinataWrite )
-
 await ServerManager
     .start( {
         silent: false,

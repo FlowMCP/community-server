@@ -1,4 +1,4 @@
-import { DeployAdvanced } from 'flowmcpServers'
+import { Deploy, DeployAdvanced } from 'flowmcpServers'
 import { X402Middleware } from 'x402-mcp-middleware'
 
 import fs from 'fs'
@@ -11,21 +11,31 @@ const __dirname = path.dirname( __filename )
 
 class CommunityServer {
     static async start( { silent, arrayOfSchemas, serverConfig, envObject, managerVersion, x402Config, x402Credentials, x402PrivateKey } ) {
-        const { serverType, app, mcps, events, argv } = DeployAdvanced
-            .init( { silent, arrayOfSchemas, serverConfig, envObject, x402Config, x402Credentials, x402PrivateKey } )
-
+        const { serverType, app, mcps, events, argv, server } = DeployAdvanced
+            .init( { silent } )
         const { chainId, chainName, contracts, paymentOptions, restrictedCalls } = x402Config
         const middleware = await X402Middleware
             .create( { chainId, chainName, contracts, paymentOptions, restrictedCalls, x402Credentials, x402PrivateKey } )
         app.use( ( await middleware ).mcp() )
 
+        const { SERVER_URL: rootUrl, SERVER_PORT: serverPort } = envObject
+
+        CommunityServer
+            .setHTML( { app, serverConfig, rootUrl, serverPort, managerVersion } )
+        DeployAdvanced
+            .start( { routes: serverConfig.routes, arrayOfSchemas, envObject, rootUrl, serverPort } )
+        return true
+    }
+
+
+    static setHTML( { app, serverConfig, rootUrl, serverPort, managerVersion } ) {
         const { landingPage: { name, description }, routes } = serverConfig
+        const serverUrl = `${rootUrl}:${serverPort}`
 
         const preparedRoutes = routes
             .map( ( route ) => {
                 const { name, description, routePath, bearerIsPublic, bearerToken } = route
-                const { SERVER_URL } = envObject
-                const url = new URL( routePath, SERVER_URL )
+                const url = new URL( routePath, serverUrl )
                 const urlSse = url + '/sse'
                 const bearer = !bearerIsPublic ? '***' : bearerToken || ''
                 return { name, description, routePath, url, bearer, urlSse }
@@ -37,13 +47,8 @@ class CommunityServer {
                 const { name, description, routePath, urlSse, bearer } = route
                 this.#addLRouteLandingPage( { app, routePath, name, description, urlSse, bearer  } )
             } )
-
-        DeployAdvanced
-            .addRoutes( { serverConfig, arrayOfSchemas, envObject } )
-
-        DeployAdvanced.start()
-        return true
     }
+
 
     static #addLandingPage({ app, managerVersion, name, description, preparedRoutes }) {
         app.get('/', (req, res) => {
@@ -54,10 +59,10 @@ class CommunityServer {
                         const { name, description, routePath, url, bearer } = route
                         const filePath = path.join( __dirname, './../public', 'route.html' )
                         const html = fs
-                            .readFileSync( filePath, 'utf8' )
-                            .replaceAll('{{HEADLINE}}', name )
+                            .readFileSync( filePath      , 'utf8'      )
+                            .replaceAll( '{{HEADLINE}}'  , name        )
                             .replaceAll('{{DESCRIPTION}}', description )
-                            .replaceAll('{{URL}}', url )
+                            .replaceAll('{{URL}}'        , url         )
                         return html
                     } )
                     .join( "\n")
