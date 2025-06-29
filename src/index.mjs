@@ -8,9 +8,9 @@ import fs from 'fs'
 
 
 class ServerManager {
-    static async start( { silent, arrayOfSchemas, serverConfig, envObject, managerVersion, webhookSecret, webhookPort, pm2Name, x402Config, x402Credentials, x402PrivateKey } ) {
+    static async start( { silent, stageType, arrayOfSchemas, serverConfig, envObject, managerVersion, webhookSecret, webhookPort, pm2Name, x402Config, x402Credentials, x402PrivateKey } ) {
         await CommunityServer
-            .start( { silent, arrayOfSchemas, serverConfig, envObject, pm2Name, managerVersion, x402Config, x402Credentials, x402PrivateKey } )
+            .start( { silent, stageType, arrayOfSchemas, serverConfig, envObject, pm2Name, managerVersion, x402Config, x402Credentials, x402PrivateKey } )
 
         WebhookServer
             .start( { webhookSecret, webhookPort, pm2Name, managerVersion } )

@@ -28,6 +28,7 @@ arrayOfSchemas.push( pinataWrite )
 await ServerManager
     .start( {
         silent: false,
+        stageType,
         arrayOfSchemas,
         serverConfig,
         envObject,

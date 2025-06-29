@@ -10,8 +10,8 @@ const __dirname = path.dirname( __filename )
 
 
 class CommunityServer {
-    static async start( { silent, arrayOfSchemas, serverConfig, envObject, managerVersion, x402Config, x402Credentials, x402PrivateKey } ) {
-        const { serverType, app, mcps, events, argv, server } = DeployAdvanced
+    static async start( { silent, stageType, arrayOfSchemas, serverConfig, envObject, managerVersion, x402Config, x402Credentials, x402PrivateKey } ) {
+        const { app, mcps, events, argv, server } = DeployAdvanced
             .init( { silent } )
         const { chainId, chainName, contracts, paymentOptions, restrictedCalls } = x402Config
         const middleware = await X402Middleware
@@ -19,18 +19,27 @@ class CommunityServer {
         app.use( ( await middleware ).mcp() )
 
         const { SERVER_URL: rootUrl, SERVER_PORT: serverPort } = envObject
+        let serverUrl = null
 
+        if( stageType === 'development' ) {
+            serverUrl = `${rootUrl}:${serverPort}`
+        } else if( stageType === 'production' ) {
+            serverUrl = rootUrl
+        } else {
+            throw new Error( `Unknown stageType: ${stageType}` )
+        }
+
+        const { routes } = serverConfig
         CommunityServer
-            .setHTML( { app, serverConfig, rootUrl, serverPort, managerVersion } )
+            .setHTML( { app, serverConfig, serverUrl, managerVersion } )
         DeployAdvanced
-            .start( { routes: serverConfig.routes, arrayOfSchemas, envObject, rootUrl, serverPort } )
+            .start( { routes, arrayOfSchemas, envObject, rootUrl, serverPort } )
         return true
     }
 
 
-    static setHTML( { app, serverConfig, rootUrl, serverPort, managerVersion } ) {
+    static setHTML( { app, serverConfig, serverUrl, managerVersion } ) {
         const { landingPage: { name, description }, routes } = serverConfig
-        const serverUrl = `${rootUrl}:${serverPort}`
 
         const preparedRoutes = routes
             .map( ( route ) => {
@@ -56,13 +65,14 @@ class CommunityServer {
                 //             res.send(`Community Server ${managerVersion}`)
                 const routes = preparedRoutes
                     .map( ( route ) => {
+
                         const { name, description, routePath, url, bearer } = route
                         const filePath = path.join( __dirname, './../public', 'route.html' )
                         const html = fs
                             .readFileSync( filePath      , 'utf8'      )
                             .replaceAll( '{{HEADLINE}}'  , name        )
                             .replaceAll('{{DESCRIPTION}}', description )
-                            .replaceAll('{{URL}}'        , url         )
+                            .replaceAll('{{URL}}'        , `.${url.pathname}` )
                         return html
                     } )
                     .join( "\n")
