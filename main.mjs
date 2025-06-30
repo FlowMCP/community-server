@@ -2,6 +2,7 @@ import { ServerManager } from './src/index.mjs'
 import { SchemaImporter } from 'schemaImporter'
 
 import { schema as pinataWrite } from './custom-schemas/pinata/write.mjs'
+import { schema as chainlinkPrices } from './custom-schemas/chainlink/getLatestPricesMulticall.mjs'
 
 
 const { stageType } = ServerManager
@@ -25,6 +26,8 @@ const arrayOfSchemas = await SchemaImporter
         outputType: 'onlySchema'
     } ) 
 arrayOfSchemas.push( pinataWrite )
+arrayOfSchemas.push( chainlinkPrices )
+
 await ServerManager
     .start( {
         silent: false,
