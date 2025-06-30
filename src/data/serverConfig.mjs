@@ -52,6 +52,11 @@ const serverConfig = {
                 'method': 'tools/call',
                 'name': 'upload_text_file_pinata',
                 'activePaymentOptions': [ 'usdc-sepolia' ],
+            },
+            {
+                'method': 'tools/call',
+                'name': 'get_all_latest_prices_ethereum_chainlink_multicall',
+                'activePaymentOptions': [ 'usdc-sepolia' ],
             }
         ],
         'paymentOptions': {
