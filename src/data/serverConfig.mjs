@@ -26,6 +26,17 @@ const serverConfig = {
             'includeNamespaces': [ 'luksoNetwork' ],
             'excludeNamespaces': [],
             'activateTags': [],
+        },
+        {
+            "name": "ChainProbe - Onchain Chainlink Price Feeds for M2M Processing",
+            "description": "Serves all onchain Chainlink price feeds from an EVM chain in a single x402-enabled request. Ideal for machine-to-machine (M2M) data retrieval and autonomous agents. Payments enforced via USDC using EIP-3009 (exact scheme) on Base Sepolia.",
+            "bearerIsPublic": true,
+            "routePath": "/chainlink/prices",
+            "bearerToken": "hal-finney",
+            "protocol": "sse",
+            "includeNamespaces": [ "chainlinkMulticall" ],
+            "excludeNamespaces": [],
+            "activateTags": []
         }
     ],
     'x402': {

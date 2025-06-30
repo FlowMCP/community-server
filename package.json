@@ -14,10 +14,11 @@
   "type": "commonjs",
   "dependencies": {
     "@modelcontextprotocol/inspector": "^0.13.0",
+    "ethers": "^6.14.4",
     "flowmcpServers": "github:flowmcp/flowMCP-servers#52ccc292c0ab03bed2d54d7e6129e017ae4b1c03",
     "pinata": "^2.4.8",
     "raw-body": "^3.0.0",
-    "schemaImporter": "github:flowmcp/flowMCP-schemas#5cc6b664dd9fba48f2ccb0d36b1d90d8c0015f9c",
+    "schemaImporter": "github:flowmcp/flowMCP-schemas#befaad1f1dfc0b3bf6668eb0f6cdda4528ab6c26",
     "x402-mcp-middleware": "github:flowmcp/x402-mcp-middleware#7f2616236df83d19bacb8014e1ea00b15dfe8cd7"
   },
   "devDependencies": {
