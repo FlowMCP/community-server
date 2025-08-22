@@ -3,6 +3,7 @@ import { SchemaImporter } from 'schemaImporter'
 
 import { schema as pinataWrite } from './custom-schemas/pinata/write.mjs'
 import { schema as chainlinkPrices } from './custom-schemas/chainlink/getLatestPricesMulticall.mjs'
+import { schemas as avalancheSchemas } from './custom-schemas/avalanche/index.mjs'
 
 
 const { stageType } = ServerManager
@@ -25,8 +26,12 @@ const arrayOfSchemas = await SchemaImporter
         addAdditionalMetaData: true,
         outputType: 'onlySchema'
     } ) 
+
 arrayOfSchemas.push( pinataWrite )
 arrayOfSchemas.push( chainlinkPrices )
+arrayOfSchemas.push( ...avalancheSchemas )
+
+console.log( 'Loaded schemas:', arrayOfSchemas.map( schema => schema.namespace ) )
 
 await ServerManager
     .start( {

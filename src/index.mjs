@@ -23,8 +23,8 @@ class ServerManager {
         const { selection } = {
             'selection': [
                 [ 'WEBHOOK_SECRET', 'webhookSecret' ],
-                [ 'WEBHOOK_PORT', 'webhookPort' ],
-                [ 'PM2_NAME', 'pm2Name' ],
+                [ 'WEBHOOK_PORT',   'webhookPort'   ],
+                [ 'PM2_NAME',       'pm2Name'       ],
             ]
         }
 

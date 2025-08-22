@@ -6,6 +6,59 @@ const serverConfig = {
     'config': {},
     'routes': [
         {
+            'name': 'avalanche',
+            'description': '',
+            'bearerIsPublic': true,
+            'routePath': '/avalanche',
+            'bearerToken': 'hal-finney',
+            'protocol': 'sse',
+            'includeNamespaces': [],
+            'excludeNamespaces': [],
+            'activateTags': [
+    // Etherscan Routes
+    'etherscan.getGasOracle',
+    'etherscan.estimateGasCost',
+    'etherscan.getAvailableChains',
+    'etherscan.getSmartContractAbi',
+    'etherscan.getSourceCode',
+    
+    // OHLCV Routes
+    'ohlcv.getRecursiveOhlcvEVM',
+    
+    // Blocknative Routes
+    'blocknative.getGasPrices',
+    
+    // DexScreener Routes
+    'dexscreener.getLatestPairs',
+    'dexscreener.getPairsByChain',
+    'dexscreener.getSpecificPair',
+    
+    // TheGraph Routes
+    'thegraph.getNewPools',
+    
+    // Moralis Routes
+    'moralis./wallets/:address/defi/:protocol/positions',
+    'moralis./wallets/:address/defi/positions',
+    'moralis./wallets/:address/defi/summary',
+    'moralis./wallets/:address/nfts/trades',
+    'moralis./:address/nft/collections',
+    'moralis./:address/nft/transfers',
+    'moralis./:address/nft',
+    'moralis./wallets/:address/swaps',
+    'moralis./wallets/:address/approvals',
+    'moralis./wallets/:address/tokens',
+    'moralis./:address/erc20',
+    'moralis./:address/erc20/transfers',
+    'moralis./wallets/:address/chains',
+    'moralis./:address/balance',
+    'moralis./wallets/:address/history',
+    'moralis./wallets/:address/net-worth',
+    'moralis./wallets/:address/profitability/summary',
+    'moralis./wallets/:address/profitability',
+    'moralis./wallets/:address/stats'
+]
+        },
+        {
             "name": "AgentPays - MCP with M2M Payment",
             "description": "Experimental server for x402 payments using USDC on Base Sepolia. Offers payment functionality for Model Context Payment (MCP) via 'exact' scheme (EIP-3009). Use with MCP Inspector or Proxy-enabled x402 clients. More info: https://github.com/FlowMCP/x402-experiments",
             'bearerIsPublic': true,
