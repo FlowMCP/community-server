@@ -6,10 +6,10 @@ const serverConfig = {
     'config': {},
     'routes': [
         {
-            'name': 'avalanche',
+            'name': 'Encrypted ERC20',
             'description': '',
             'bearerIsPublic': true,
-            'routePath': '/avalanche',
+            'routePath': '/eerc20',
             'bearerToken': 'hal-finney',
             'protocol': 'sse',
             'includeNamespaces': [],
