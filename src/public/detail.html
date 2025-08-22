@@ -10,9 +10,10 @@
       font-family: system-ui, sans-serif;
       display: flex;
       justify-content: center;
-      align-items: center;
-      height: 100vh;
+      align-items: flex-start;
+      min-height: 100vh;
       background: linear-gradient(to bottom, #e3f2fd, #ffffff);
+      padding: 2rem 0;
     }
 
     .container {
@@ -23,6 +24,8 @@
       max-width: 600px;
       width: 90%;
       text-align: left;
+      max-height: none;
+      overflow-y: auto;
     }
 
     h1 {
@@ -85,6 +88,43 @@
       font-size: 0.95rem;
       display: none;
     }
+
+    .routes-list {
+      background-color: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin: 1rem 0;
+    }
+
+    .routes-list li {
+      margin-bottom: 0.5rem;
+      padding: 0.25rem 0;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .routes-list li:last-child {
+      border-bottom: none;
+    }
+
+    .routes-list strong {
+      color: #0d6efd;
+    }
+
+    .back-button {
+      display: inline-block;
+      margin-top: 2rem;
+      padding: 0.5rem 1rem;
+      background-color: #6c757d;
+      color: white;
+      text-decoration: none;
+      border-radius: 0.25rem;
+      transition: background-color 0.2s;
+    }
+
+    .back-button:hover {
+      background-color: #5a6268;
+    }
   </style>
 </head>
 <body>
@@ -94,6 +134,8 @@
 
     <h2>Connection Setup</h2>
     <p>Below you'll find the required URL and headers to authenticate your requests.</p>
+    
+    <p><strong>Authorization: Bearer {{TOKEN}}</strong></p>
 
     <h3>Connection URL</h3>
     <p>Use this URL to connect to the API service.</p>
@@ -109,19 +151,18 @@
       <button onclick="copyToClipboard('token')">Copy Token</button>
     </div>
 
-    <h3>Complete Authorization Header</h3>
-    <p>Complete header for manual integration:</p>
-    <div class="link-box">
-      <input type="text" id="header" value="Authorization: Bearer {{TOKEN}}" readonly />
-      <button onclick="copyToClipboard('header')">Copy Header</button>
-    </div>
-
     <h3>Claude Code Integration</h3>
     <p>Add this MCP server to Claude Code:</p>
     <div class="link-box">
       <input type="text" id="claude-cmd" value="claude mcp add --transport sse {{SERVICE_NAME}} {{URL}} --header &quot;Authorization:Bearer {{TOKEN}}&quot;" readonly />
       <button onclick="copyToClipboard('claude-cmd')">Copy Command</button>
     </div>
+
+    <h2>Available Methods</h2>
+    <p>All methods available on this server:</p>
+    <ul class="routes-list">
+      {{AVAILABLE_ROUTES}}
+    </ul>
 
     <div class="copied" id="copiedMsg">Copied!</div>
 

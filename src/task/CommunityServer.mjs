@@ -59,7 +59,8 @@ class CommunityServer {
         preparedRoutes
             .forEach( ( route ) => {
                 const { name, description, routePath, urlSse, bearer } = route
-                this.#addLRouteLandingPage( { app, routePath, name, description, urlSse, bearer  } )
+                const currentRoute = routes.find( r => r.routePath === routePath )
+                this.#addLRouteLandingPage( { app, routePath, name, description, urlSse, bearer, currentRoute } )
             } )
     }
 
@@ -101,10 +102,25 @@ class CommunityServer {
         })
     }
 
-    static #addLRouteLandingPage({ app, routePath, name, description, urlSse, bearer } ) {
+    static #addLRouteLandingPage({ app, routePath, name, description, urlSse, bearer, currentRoute } ) {
         app.get(routePath, (req, res) => {
             try {
                 const filePath = path.join(__dirname, './../public', 'detail.html')
+                
+                const { activateTags = [], includeNamespaces = [] } = currentRoute || {}
+                let availableMethods = []
+                
+                if( activateTags.length > 0 ) {
+                    availableMethods = activateTags
+                        .map( tag => `<li><strong>${tag}</strong> - Activated tool method</li>` )
+                } else if( includeNamespaces.length > 0 ) {
+                    availableMethods = includeNamespaces
+                        .map( namespace => `<li><strong>${namespace}.*</strong> - All methods from ${namespace} namespace</li>` )
+                } else {
+                    availableMethods = [`<li>No specific methods configured - check server logs for available tools</li>`]
+                }
+                
+                const availableMethodsHtml = availableMethods.join( '' )
 
                 let html = fs.readFileSync(filePath, 'utf8')
                     .replaceAll('{{HEADLINE}}', name )
@@ -112,6 +128,7 @@ class CommunityServer {
                     .replaceAll('{{URL}}', urlSse )
                     .replaceAll('{{TOKEN}}', bearer )
                     .replaceAll('{{SERVICE_NAME}}', name.replace(/\s+/g, '_').toLowerCase() )
+                    .replaceAll('{{AVAILABLE_ROUTES}}', availableMethodsHtml )
 
                 res.send(html)
             } catch (err) {
