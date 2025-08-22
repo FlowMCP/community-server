@@ -13,10 +13,13 @@ class CommunityServer {
     static async start( { silent, stageType, arrayOfSchemas, serverConfig, envObject, managerVersion, x402Config, x402Credentials, x402PrivateKey } ) {
         const { app, mcps, events, argv, server } = DeployAdvanced
             .init( { silent } )
-        const { chainId, chainName, contracts, paymentOptions, restrictedCalls } = x402Config
-        const middleware = await X402Middleware
-            .create( { chainId, chainName, contracts, paymentOptions, restrictedCalls, x402Credentials, x402PrivateKey } )
-        app.use( ( await middleware ).mcp() )
+        
+        if( stageType !== 'test' ) {
+            const { chainId, chainName, contracts, paymentOptions, restrictedCalls } = x402Config
+            const middleware = await X402Middleware
+                .create( { chainId, chainName, contracts, paymentOptions, restrictedCalls, x402Credentials, x402PrivateKey } )
+            app.use( ( await middleware ).mcp() )
+        }
 
         const { SERVER_URL: rootUrl, SERVER_PORT: serverPort } = envObject
         let serverUrl = null
@@ -25,6 +28,8 @@ class CommunityServer {
             serverUrl = `${rootUrl}:${serverPort}`
         } else if( stageType === 'production' ) {
             serverUrl = rootUrl
+        } else if( stageType === 'test' ) {
+            serverUrl = `${rootUrl}:${serverPort}`
         } else {
             throw new Error( `Unknown stageType: ${stageType}` )
         }
@@ -106,6 +111,7 @@ class CommunityServer {
                     .replaceAll('{{DESCRIPTION}}', description )
                     .replaceAll('{{URL}}', urlSse )
                     .replaceAll('{{TOKEN}}', bearer )
+                    .replaceAll('{{SERVICE_NAME}}', name.replace(/\s+/g, '_').toLowerCase() )
 
                 res.send(html)
             } catch (err) {

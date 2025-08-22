@@ -31,7 +31,6 @@ arrayOfSchemas.push( pinataWrite )
 arrayOfSchemas.push( chainlinkPrices )
 arrayOfSchemas.push( ...avalancheSchemas )
 
-console.log( 'Loaded schemas:', arrayOfSchemas.map( schema => schema.namespace ) )
 
 await ServerManager
     .start( {

@@ -1,6 +1,7 @@
 import fs from 'fs'
 
 import { serverConfig } from '../../src/data/serverConfig.mjs'
+import { SchemaTransformer } from '../../src/utils/schemaTransformer.mjs'
 
 const schemasPath = './node_modules/schemaImporter/schemas/v1.2.0/'
 
@@ -56,6 +57,14 @@ const allImportPromises = availableNamespaces
     } )
 
 const allSchemas = await Promise.all( allImportPromises )
-const schemas = allSchemas.flat()
+const rawSchemas = allSchemas.flat()
+
+// Transform old schema format to new format
+const transformedSchemas = SchemaTransformer
+    .transformArray( { schemas: rawSchemas } )
+
+// Merge schemas with same namespace
+const schemas = SchemaTransformer
+    .mergeSchemasByNamespace( { schemas: transformedSchemas } )
 
 export { schemas }

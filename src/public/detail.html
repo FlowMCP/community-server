@@ -98,15 +98,29 @@
     <h3>Connection URL</h3>
     <p>Use this URL to connect to the API service.</p>
     <div class="link-box">
-      <input type="text" id="link" value="{{URL}}" readonly />
-      <button onclick="copyToClipboard('link')">Copy</button>
+      <input type="text" id="url" value="{{URL}}" readonly />
+      <button onclick="copyToClipboard('url')">Copy URL</button>
     </div>
 
-    <h3>Headers</h3>
-    <p>Set the following HTTP header to authenticate your request:</p>
+    <h3>Authentication Token</h3>
+    <p>Bearer token for authentication (without header prefix):</p>
+    <div class="link-box">
+      <input type="text" id="token" value="{{TOKEN}}" readonly />
+      <button onclick="copyToClipboard('token')">Copy Token</button>
+    </div>
+
+    <h3>Complete Authorization Header</h3>
+    <p>Complete header for manual integration:</p>
     <div class="link-box">
       <input type="text" id="header" value="Authorization: Bearer {{TOKEN}}" readonly />
-      <button onclick="copyToClipboard('header')">Copy</button>
+      <button onclick="copyToClipboard('header')">Copy Header</button>
+    </div>
+
+    <h3>Claude Code Integration</h3>
+    <p>Add this MCP server to Claude Code:</p>
+    <div class="link-box">
+      <input type="text" id="claude-cmd" value="claude mcp add --transport sse {{SERVICE_NAME}} {{URL}} --header &quot;Authorization:Bearer {{TOKEN}}&quot;" readonly />
+      <button onclick="copyToClipboard('claude-cmd')">Copy Command</button>
     </div>
 
     <div class="copied" id="copiedMsg">Copied!</div>
@@ -122,6 +136,17 @@
 
       navigator.clipboard.writeText(input.value).then(() => {
         const msg = document.getElementById("copiedMsg");
+        const buttonText = event.target.textContent;
+        msg.textContent = `${buttonText} - Copied!`;
+        msg.style.display = "block";
+        setTimeout(() => (msg.style.display = "none"), 2000);
+      }).catch(err => {
+        // Fallback for older browsers
+        input.select();
+        document.execCommand('copy');
+        const msg = document.getElementById("copiedMsg");
+        const buttonText = event.target.textContent;
+        msg.textContent = `${buttonText} - Copied!`;
         msg.style.display = "block";
         setTimeout(() => (msg.style.display = "none"), 2000);
       });

@@ -1,7 +1,8 @@
 const config = {
     'env': {
         'development': './../.community.env',
-        'production': './../.env'
+        'production': './../.env',
+        'test': './tests/.test.env'
     }
 }
 
