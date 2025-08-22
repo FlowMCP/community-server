@@ -14,7 +14,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
         } )
 
         test( 'should handle development stage', () => {
-            const result = ServerManager.getWebhookEnv( { stageType: 'development' } )
+            const result = ServerManager.getWebhookEnv( { stageType: 'development-test' } )
             
             expect( result ).toBeDefined()
             expect( typeof result ).toBe( 'object' )
@@ -171,7 +171,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
         } )
 
         test( 'should handle development stage environment', () => {
-            const { envObject } = ServerManager.getEnvObject( { stageType: 'development' } )
+            const { envObject } = ServerManager.getEnvObject( { stageType: 'development-test' } )
             
             expect( envObject ).toBeDefined()
             expect( typeof envObject ).toBe( 'object' )
