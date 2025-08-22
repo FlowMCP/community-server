@@ -1,0 +1,72 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ published, created ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [22.x]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Create test environment file
+      run: |
+        echo "# Test Environment Variables for ServerManager Tests" > tests/.test.env
+        echo "WEBHOOK_SECRET=test-webhook-secret-123" >> tests/.test.env
+        echo "WEBHOOK_PORT=3007" >> tests/.test.env
+        echo "PM2_NAME=test-community-server" >> tests/.test.env
+        echo "BEARER_TOKEN__0=test-avalanche-token" >> tests/.test.env
+        echo "BEARER_TOKEN__1=test-agentpays-token" >> tests/.test.env
+        echo "BEARER_TOKEN__2=test-lukso-token" >> tests/.test.env
+        echo "BEARER_TOKEN__3=test-chainlink-token" >> tests/.test.env
+        echo "ACCOUNT_DEVELOPMENT2_PRIVATE_KEY=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12" >> tests/.test.env
+        echo "ACCOUNT_DEVELOPMENT2_PUBLIC_KEY=0x742d35Cc6634C0532925a3b8D6aC6782d3B5C123" >> tests/.test.env
+        echo "BASE_SEPOLIA_ALCHEMY_HTTP=https://base-sepolia.g.alchemy.com/v2/test-api-key-12345" >> tests/.test.env
+        
+    - name: Create development environment file  
+      run: |
+        echo "# Development Environment Variables for Community Server" > .community.env
+        echo "SERVER_URL=http://localhost" >> .community.env
+        echo "SERVER_PORT=3000" >> .community.env
+        echo "WEBHOOK_SECRET=dev_webhook_secret_123" >> .community.env
+        echo "WEBHOOK_PORT=3001" >> .community.env
+        echo "PM2_NAME=community-server-dev" >> .community.env
+        echo "BEARER_TOKEN__0=dev_bearer_token_route_0" >> .community.env
+        echo "BEARER_TOKEN__1=dev_bearer_token_route_1" >> .community.env
+        echo "BEARER_TOKEN__2=dev_bearer_token_route_2" >> .community.env  
+        echo "BEARER_TOKEN__3=dev_bearer_token_route_3" >> .community.env
+        echo "ACCOUNT_DEVELOPMENT2_PRIVATE_KEY=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef" >> .community.env
+        echo "ACCOUNT_DEVELOPMENT2_PUBLIC_KEY=0x742d35Cc6634C0532925a3b8D6aC6782d3B5C123" >> .community.env
+        echo "BASE_SEPOLIA_ALCHEMY_HTTP=https://base-sepolia.g.alchemy.com/v2/dev-api-key" >> .community.env
+        
+    - name: Run unit and comprehensive tests (CI-compatible)
+      run: NODE_OPTIONS='--experimental-vm-modules' npx jest tests/ServerManager.simple.test.mjs tests/ServerManager.comprehensive.test.mjs --detectOpenHandles --verbose
+      env:
+        CI: true
+        
+    - name: Run all tests including integration (may have server dependencies)
+      run: npm test
+      continue-on-error: true
+      env:
+        CI: true
+        NODE_OPTIONS: '--experimental-vm-modules'
