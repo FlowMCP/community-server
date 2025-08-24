@@ -4,6 +4,7 @@ import { X402Middleware } from 'x402-mcp-middleware'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import net from 'net'
 
 const __filename = fileURLToPath( import.meta.url )
 const __dirname = path.dirname( __filename )
@@ -35,10 +36,28 @@ class CommunityServer {
         }
 
         const { routes } = serverConfig
+        
+        // Check if port is available before starting server
+        await CommunityServer.#checkPortAvailability( { serverPort } )
+        
         CommunityServer
             .setHTML( { app, serverConfig, serverUrl, managerVersion } )
-        DeployAdvanced
-            .start( { routes, arrayOfSchemas, envObject, rootUrl, serverPort } )
+        
+        try {
+            DeployAdvanced
+                .start( { routes, arrayOfSchemas, envObject, rootUrl, serverPort } )
+        } catch( error ) {
+            if( error.code === 'EADDRINUSE' || error.message.includes( 'EADDRINUSE' ) ) {
+                console.error( `❌ Port ${serverPort} is already in use!` )
+                console.error( `💡 Try one of these solutions:` )
+                console.error( `   1. Kill the process using port ${serverPort}: lsof -ti:${serverPort} | xargs kill -9` )
+                console.error( `   2. Use a different port in your .community.env: SERVER_PORT=8081` )
+                console.error( `   3. Check what's running on port ${serverPort}: lsof -i:${serverPort}` )
+                process.exit( 1 )
+            }
+            throw error
+        }
+        
         return true
     }
 
@@ -121,13 +140,16 @@ class CommunityServer {
                 }
                 
                 const availableMethodsHtml = availableMethods.join( '' )
+                
+                // Extract route name from routePath (e.g. '/lukso' becomes 'lukso')
+                const routeName = routePath.replace( /^\//, '' ).replace( /\//g, '_' )
 
                 let html = fs.readFileSync(filePath, 'utf8')
                     .replaceAll('{{HEADLINE}}', name )
                     .replaceAll('{{DESCRIPTION}}', description )
                     .replaceAll('{{URL}}', urlSse )
                     .replaceAll('{{TOKEN}}', bearer )
-                    .replaceAll('{{SERVICE_NAME}}', name.replace(/\s+/g, '_').toLowerCase() )
+                    .replaceAll('{{SERVICE_NAME}}', routeName )
                     .replaceAll('{{AVAILABLE_ROUTES}}', availableMethodsHtml )
 
                 res.send(html)
@@ -136,6 +158,46 @@ class CommunityServer {
                 res.status(500).send('Serverfehler')
             }
         })
+    }
+
+
+    static async #checkPortAvailability( { serverPort } ) {
+        return new Promise( ( resolve, reject ) => {
+            const server = net.createServer()
+            
+            server.listen( serverPort, ( error ) => {
+                if( error ) {
+                    if( error.code === 'EADDRINUSE' ) {
+                        console.error( `❌ Port ${serverPort} is already in use!` )
+                        console.error( `💡 Try one of these solutions:` )
+                        console.error( `   1. Kill the process using port ${serverPort}: lsof -ti:${serverPort} | xargs kill -9` )
+                        console.error( `   2. Use a different port in your .community.env: SERVER_PORT=8081` )
+                        console.error( `   3. Check what's running on port ${serverPort}: lsof -i:${serverPort}` )
+                        console.error( `   4. Find available ports: netstat -tuln | grep LISTEN` )
+                        process.exit( 1 )
+                    }
+                    reject( error )
+                } else {
+                    server.close( () => {
+                        console.log( `✅ Port ${serverPort} is available` )
+                        resolve()
+                    } )
+                }
+            } )
+            
+            server.on( 'error', ( error ) => {
+                if( error.code === 'EADDRINUSE' ) {
+                    console.error( `❌ Port ${serverPort} is already in use!` )
+                    console.error( `💡 Try one of these solutions:` )
+                    console.error( `   1. Kill the process using port ${serverPort}: lsof -ti:${serverPort} | xargs kill -9` )
+                    console.error( `   2. Use a different port in your .community.env: SERVER_PORT=8081` )
+                    console.error( `   3. Check what's running on port ${serverPort}: lsof -i:${serverPort}` )
+                    console.error( `   4. Find available ports: netstat -tuln | grep LISTEN` )
+                    process.exit( 1 )
+                }
+                reject( error )
+            } )
+        } )
     }
 }
 

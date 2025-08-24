@@ -7,7 +7,7 @@ const serverConfig = {
     'routes': [
         {
             'name': 'Encrypted ERC20',
-            'description': '',
+            'description': 'This is an experimental server for an encrypted ERC20 schema for the x402 protocol. Further information at: https://github.com/a6b8/backendshield',
             'bearerIsPublic': true,
             'routePath': '/eerc20',
             'bearerToken': 'hal-finney',
@@ -15,14 +15,23 @@ const serverConfig = {
             'includeNamespaces': [],
             'excludeNamespaces': [],
             'activateTags': [
-    // OHLCV Routes
+    // Etherscan Routes - Removed due to handler incompatibility
+    // 'etherscan.getAvailableChains',
+    // 'etherscan.getSmartContractAbi', 
+    // 'etherscan.getSourceCode',
+    
+    // OHLCV Routes - Perfect for Avalanche price data (supports AVALANCHE_MAINNET)
     'ohlcv.getRecursiveOhlcvEVM',
     
-    // Blocknative Routes
+    // Blocknative Routes - Gas price optimization
     'blocknative.getGasPrices',
     
-    // TheGraph Routes
-    'thegraph.getNewPools'
+    // DexScreener Routes - DEX trading data (REMOVED - no schema available)
+    
+    // TheGraph Routes - Uniswap pool data
+    'thegraph.getNewPools',
+    
+    // Moralis Routes - REMOVED (schemas not available in node_modules)
 ]
         },
         {
