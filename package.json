@@ -8,7 +8,9 @@
     "start:dev": "node main.mjs --stage=development",
     "start:server": "node main.mjs --stage=production",
     "test": "NODE_OPTIONS='--experimental-vm-modules' ./node_modules/.bin/jest --detectOpenHandles --verbose",
-    "test:summary": "NODE_OPTIONS='--experimental-vm-modules' npx jest --detectOpenHandles"
+    "test:summary": "NODE_OPTIONS='--experimental-vm-modules' npx jest --detectOpenHandles",
+    "test:single": "NODE_OPTIONS='--experimental-vm-modules' npx jest",
+    "test:coverage:src": "NODE_OPTIONS='--experimental-vm-modules' npx jest --coverage --collectCoverageFrom='src/**/*.mjs'"
   },
   "keywords": [],
   "author": "",
@@ -17,11 +19,11 @@
   "dependencies": {
     "@modelcontextprotocol/inspector": "^0.13.0",
     "ethers": "^6.14.4",
-    "flowmcpServers": "github:flowmcp/flowMCP-servers#22c5d78a23fcc525368fb700070dd4bd6842f7cb",
+    "flowmcpServers": "github:flowmcp/flowMCP-servers#1859859e335b20696cc0fcfc058bf53b7605db33",
     "moment": "^2.30.1",
     "pinata": "^2.4.8",
     "raw-body": "^3.0.0",
-    "schemaImporter": "github:flowmcp/flowMCP-schemas#bf31ce2e1e7946a2a25102303d489c2507b57b94",
+    "schemaImporter": "github:flowmcp/flowMCP-schemas#3969e3b2ddae3d5d3d1c8bb8d4131b00d854af4d",
     "x402-mcp-middleware": "github:flowmcp/x402-mcp-middleware#7f2616236df83d19bacb8014e1ea00b15dfe8cd7"
   },
   "devDependencies": {

@@ -1,1 +1,12 @@
 node_modules
+.trash
+
+# Environment files
+.env*
+!.env.example
+
+# Secrets and keys  
+*.key
+*.pem
+secrets/
+config/production.env

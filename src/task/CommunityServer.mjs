@@ -11,7 +11,7 @@ const __dirname = path.dirname( __filename )
 
 
 class CommunityServer {
-    static async start( { silent, stageType, arrayOfSchemas, serverConfig, envObject, managerVersion, x402Config, x402Credentials, x402PrivateKey } ) {
+    static async start( { silent, stageType, objectOfSchemaArrays, serverConfig, envObject, managerVersion, x402Config, x402Credentials, x402PrivateKey } ) {
         const { app, mcps, events, argv, server } = DeployAdvanced
             .init( { silent } )
         
@@ -43,9 +43,39 @@ class CommunityServer {
         CommunityServer
             .setHTML( { app, serverConfig, serverUrl, managerVersion } )
         
+        // Map route schemas from objectOfSchemaArrays to routes and collect all schemas
+        let allSchemas = []
+        const routesWithSchemas = routes
+            .map( ( route ) => {
+                const { routePath } = route
+                const schemasForRoute = objectOfSchemaArrays[ routePath ] || []
+                
+                if( schemasForRoute.length === 0 && !silent ) {
+                    console.warn( `⚠️  No schemas found for route ${routePath}` )
+                }
+                
+                // Collect all schemas for DeployAdvanced (which expects arrayOfSchemas)
+                allSchemas = allSchemas.concat( schemasForRoute )
+                
+                return {
+                    ...route,
+                    schemas: schemasForRoute
+                }
+            } )
+        
+        // Remove duplicates from allSchemas
+        allSchemas = allSchemas
+            .filter( ( schema, index, self ) =>
+                index === self.findIndex( s => (s?.name === schema?.name && s?.namespace === schema?.namespace) )
+            )
+        
+        if( !silent ) {
+            console.log( `🔧 Collected ${allSchemas.length} unique schemas across ${routes.length} routes` )
+        }
+        
         try {
             DeployAdvanced
-                .start( { routes, arrayOfSchemas, envObject, rootUrl, serverPort } )
+                .start( { routes, arrayOfSchemas: allSchemas, envObject, rootUrl, serverPort } )
         } catch( error ) {
             if( error.code === 'EADDRINUSE' || error.message.includes( 'EADDRINUSE' ) ) {
                 console.error( `❌ Port ${serverPort} is already in use!` )
@@ -126,17 +156,25 @@ class CommunityServer {
             try {
                 const filePath = path.join(__dirname, './../public', 'detail.html')
                 
-                const { activateTags = [], includeNamespaces = [] } = currentRoute || {}
+                const { schemas = [], activateTags = [], includeNamespaces = [] } = currentRoute || {}
                 let availableMethods = []
                 
-                if( activateTags.length > 0 ) {
+                // Use actual schemas if available
+                if( schemas.length > 0 ) {
+                    availableMethods = schemas
+                        .map( schema => {
+                            const name = schema?.name || schema?.info?.name || 'Unknown Tool'
+                            const description = schema?.description || schema?.info?.description || 'No description available'
+                            return `<li><strong>${name}</strong> - ${description}</li>`
+                        } )
+                } else if( activateTags.length > 0 ) {
                     availableMethods = activateTags
                         .map( tag => `<li><strong>${tag}</strong> - Activated tool method</li>` )
                 } else if( includeNamespaces.length > 0 ) {
                     availableMethods = includeNamespaces
                         .map( namespace => `<li><strong>${namespace}.*</strong> - All methods from ${namespace} namespace</li>` )
                 } else {
-                    availableMethods = [`<li>No specific methods configured - check server logs for available tools</li>`]
+                    availableMethods = [`<li>No schemas loaded - check server configuration</li>`]
                 }
                 
                 const availableMethodsHtml = availableMethods.join( '' )

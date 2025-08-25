@@ -32,10 +32,14 @@ class TestServerHelper {
             ]
         }
 
+        const objectOfSchemaArrays = {
+            '/clean': [ x402PingSchema ]
+        }
+
         const result = await ServerManager.start( {
             silent: true,
             stageType: 'test',
-            arrayOfSchemas: [ x402PingSchema ],
+            objectOfSchemaArrays,
             serverConfig: testServerConfig,
             envObject: testEnvObject,
             managerVersion: '0.0.1',
@@ -48,7 +52,7 @@ class TestServerHelper {
         } )
 
         return {
-            port: 8080, // DeployAdvanced default port
+            port: port, // Use the actual port passed to the method
             bearerToken: '',  // No auth for testing
             endpoint: '/clean/sse'
         }
@@ -57,7 +61,12 @@ class TestServerHelper {
 
 // If called directly, start server and wait for SIGTERM
 if( import.meta.url === `file://${process.argv[1]}` ) {
-    const { port, bearerToken, endpoint } = await TestServerHelper.startTestServer( {} )
+    // Get port from command line arguments or environment
+    const portArg = process.argv[2] ? parseInt(process.argv[2]) : 
+                   process.env.SERVER_PORT ? parseInt(process.env.SERVER_PORT) : 
+                   8080
+    
+    const { port, bearerToken, endpoint } = await TestServerHelper.startTestServer( { port: portArg } )
     console.log( `Test server running on port ${port}` )
     console.log( `Bearer token: ${bearerToken}` )
     console.log( `Endpoint: ${endpoint}` )

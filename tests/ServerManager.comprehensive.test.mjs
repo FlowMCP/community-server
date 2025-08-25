@@ -1,4 +1,5 @@
 import { ServerManager } from '../src/index.mjs'
+import { serverConfig } from '../serverConfig.mjs'
 import fs from 'fs'
 
 
@@ -6,7 +7,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
 
     describe( 'getWebhookEnv() method', () => {
         test( 'should extract webhook environment variables from test stage', () => {
-            const { webhookSecret, webhookPort, pm2Name } = ServerManager.getWebhookEnv( { stageType: 'test' } )
+            const { webhookSecret, webhookPort, pm2Name } = ServerManager.getWebhookEnv( { stageType: 'test', serverConfig } )
             
             expect( webhookSecret ).toBe( 'test-webhook-secret-123' )
             expect( webhookPort ).toBe( '3007' )
@@ -14,7 +15,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
         } )
 
         test( 'should handle development stage', () => {
-            const result = ServerManager.getWebhookEnv( { stageType: 'development-test' } )
+            const result = ServerManager.getWebhookEnv( { stageType: 'development-test', serverConfig } )
             
             expect( result ).toBeDefined()
             expect( typeof result ).toBe( 'object' )
@@ -79,7 +80,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
             expect( x402Config ).toBeDefined()
             expect( x402Credentials.payTo1 ).toBeUndefined()
             expect( x402Credentials.serverProviderUrl ).toBeUndefined()
-            expect( x402PrivateKey ).toBeUndefined()
+            expect( x402PrivateKey ).toBeNull()
         } )
     } )
 
@@ -87,7 +88,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
     describe( 'getServerConfig() method', () => {
         test( 'should replace bearer tokens from envObject', () => {
             const envObject = {
-                'BEARER_TOKEN__0': 'custom-avalanche-token',
+                'BEARER_TOKEN__0': 'custom-eerc20-token',
                 'BEARER_TOKEN__1': 'custom-agentpays-token',
                 'BEARER_TOKEN__2': 'custom-lukso-token',
                 'BEARER_TOKEN__3': 'custom-chainlink-token'
@@ -99,7 +100,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
             expect( serverConfig.routes ).toBeDefined()
             expect( Array.isArray( serverConfig.routes ) ).toBe( true )
             
-            expect( serverConfig.routes[ 0 ].bearerToken ).toBe( 'custom-avalanche-token' )
+            expect( serverConfig.routes[ 0 ].bearerToken ).toBe( 'custom-eerc20-token' )
             expect( serverConfig.routes[ 1 ].bearerToken ).toBe( 'custom-agentpays-token' )
             expect( serverConfig.routes[ 2 ].bearerToken ).toBe( 'custom-lukso-token' )
             expect( serverConfig.routes[ 3 ].bearerToken ).toBe( 'custom-chainlink-token' )
@@ -122,10 +123,10 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
             expect( warnMessages ).toContain( 'Missing BEARER_TOKEN__3 in .env file' )
             
             expect( serverConfig.routes[ 0 ].bearerToken ).toBe( 'only-first-token' )
-            // Check that routes without custom tokens preserve original values
-            expect( serverConfig.routes[ 1 ].bearerToken ).toBeDefined()
-            expect( serverConfig.routes[ 2 ].bearerToken ).toBeDefined()
-            expect( serverConfig.routes[ 3 ].bearerToken ).toBeDefined()
+            // Check that routes without custom tokens get default values
+            expect( serverConfig.routes[ 1 ].bearerToken ).toBe( 'default-token-1' )
+            expect( serverConfig.routes[ 2 ].bearerToken ).toBe( 'default-token-2' )
+            expect( serverConfig.routes[ 3 ].bearerToken ).toBe( 'default-token-3' )
             
             console.warn = originalWarn
         } )
@@ -150,7 +151,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
 
     describe( 'getEnvObject() method with real file reading', () => {
         test( 'should read and parse test environment file', () => {
-            const { envObject } = ServerManager.getEnvObject( { stageType: 'test' } )
+            const { envObject } = ServerManager.getEnvObject( { stageType: 'test', serverConfig } )
             
             expect( envObject ).toBeDefined()
             expect( typeof envObject ).toBe( 'object' )
@@ -158,12 +159,12 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
             expect( envObject[ 'WEBHOOK_SECRET' ] ).toBe( 'test-webhook-secret-123' )
             expect( envObject[ 'WEBHOOK_PORT' ] ).toBe( '3007' )
             expect( envObject[ 'PM2_NAME' ] ).toBe( 'test-community-server' )
-            expect( envObject[ 'BEARER_TOKEN__0' ] ).toBe( 'test-avalanche-token' )
+            expect( envObject[ 'BEARER_TOKEN__0' ] ).toBe( 'test-eerc20-token' )
             expect( envObject[ 'ACCOUNT_DEVELOPMENT2_PRIVATE_KEY' ] ).toBe( '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12' )
         } )
 
         test( 'should filter out comments and empty lines', () => {
-            const { envObject } = ServerManager.getEnvObject( { stageType: 'test' } )
+            const { envObject } = ServerManager.getEnvObject( { stageType: 'test', serverConfig } )
             
             // Should not contain comment keys
             expect( envObject[ '# Test Environment Variables for ServerManager Tests' ] ).toBeUndefined()
@@ -171,7 +172,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
         } )
 
         test( 'should handle development stage environment', () => {
-            const { envObject } = ServerManager.getEnvObject( { stageType: 'development-test' } )
+            const { envObject } = ServerManager.getEnvObject( { stageType: 'development-test', serverConfig } )
             
             expect( envObject ).toBeDefined()
             expect( typeof envObject ).toBe( 'object' )
@@ -214,7 +215,7 @@ ANOTHER_VALID=another_value
             const originalReadFileSync = fs.readFileSync
             fs.readFileSync = () => envContent
             
-            const { envObject } = ServerManager.getEnvObject( { stageType: 'test' } )
+            const { envObject } = ServerManager.getEnvObject( { stageType: 'test', serverConfig } )
             
             expect( envObject[ 'VALID_KEY' ] ).toBe( 'valid_value' )
             expect( envObject[ 'ANOTHER_VALID' ] ).toBe( 'another_value' )

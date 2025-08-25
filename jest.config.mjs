@@ -14,5 +14,16 @@ export default {
         '!src/**/*.test.mjs',
         '!src/**/*.spec.mjs'
     ],
-    injectGlobals: true
+    coverageThreshold: {
+        global: {
+            statements: 75,
+            branches: 73,
+            functions: 84,
+            lines: 75
+        }
+    },
+    coverageReporters: [ 'text', 'lcov', 'html' ],
+    injectGlobals: true,
+    silent: true,
+    setupFilesAfterEnv: ['<rootDir>/tests/setup.mjs']
 }
