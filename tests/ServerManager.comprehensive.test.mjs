@@ -159,7 +159,8 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
             expect( envObject[ 'WEBHOOK_SECRET' ] ).toBe( 'test-webhook-secret-123' )
             expect( envObject[ 'WEBHOOK_PORT' ] ).toBe( '3007' )
             expect( envObject[ 'PM2_NAME' ] ).toBe( 'test-community-server' )
-            expect( envObject[ 'BEARER_TOKEN__0' ] ).toBe( 'test-eerc20-token' )
+            // GitHub Actions uses different token value than local .test.env file
+            expect( envObject[ 'BEARER_TOKEN__0' ] ).toMatch( /^test-(eerc20|avalanche)-token$/ )
             expect( envObject[ 'ACCOUNT_DEVELOPMENT2_PRIVATE_KEY' ] ).toBe( '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12' )
         } )
 
