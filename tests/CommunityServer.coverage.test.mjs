@@ -540,4 +540,105 @@ describe( 'CommunityServer Coverage Tests', () => {
         } )
     } )
 
+    describe( 'HTML template error handling and alternative paths', () => {
+        test( 'should handle activateTags path in route schemas', async () => {
+            const config = {
+                ...baseConfig,
+                silent: false,
+                serverConfig: {
+                    ...baseConfig.serverConfig,
+                    routes: [{
+                        routePath: '/test-tags',
+                        name: 'Test Tags',
+                        description: 'Test route with activate tags',
+                        protocol: 'sse',
+                        bearerToken: 'test-token'
+                    }]
+                },
+                objectOfSchemaArrays: {
+                    '/test-tags': []
+                }
+            }
+            
+            // Mock a route that uses activateTags
+            const mockRoute = {
+                routePath: '/test-tags',
+                name: 'Test Tags',
+                activateTags: [ 'tag1', 'tag2' ],
+                includeNamespaces: []
+            }
+            
+            const originalFind = Array.prototype.find
+            Array.prototype.find = jest.fn().mockReturnValue( mockRoute )
+            
+            mockNet.createServer.mockReturnValueOnce( createMockServer( { listenSuccess: true } ) )
+            mockDeployAdvanced.start.mockReturnValueOnce( true )
+            
+            await CommunityServer.start( config )
+            
+            Array.prototype.find = originalFind
+        } )
+
+        test( 'should handle includeNamespaces path in route schemas', async () => {
+            const config = {
+                ...baseConfig,
+                silent: false,
+                serverConfig: {
+                    ...baseConfig.serverConfig,
+                    routes: [{
+                        routePath: '/test-namespaces',
+                        name: 'Test Namespaces',
+                        description: 'Test route with include namespaces',
+                        protocol: 'sse',
+                        bearerToken: 'test-token'
+                    }]
+                },
+                objectOfSchemaArrays: {
+                    '/test-namespaces': []
+                }
+            }
+            
+            // Mock a route that uses includeNamespaces
+            const mockRoute = {
+                routePath: '/test-namespaces',
+                name: 'Test Namespaces',
+                activateTags: [],
+                includeNamespaces: [ 'namespace1', 'namespace2' ]
+            }
+            
+            const originalFind = Array.prototype.find
+            Array.prototype.find = jest.fn().mockReturnValue( mockRoute )
+            
+            mockNet.createServer.mockReturnValueOnce( createMockServer( { listenSuccess: true } ) )
+            mockDeployAdvanced.start.mockReturnValueOnce( true )
+            
+            await CommunityServer.start( config )
+            
+            Array.prototype.find = originalFind
+        } )
+
+        test( 'should handle schemas without routes property', async () => {
+            const schemaWithoutRoutes = {
+                name: 'Simple Schema',
+                namespace: 'simple',
+                description: 'A schema without routes'
+            }
+            
+            const config = {
+                ...baseConfig,
+                silent: false,
+                objectOfSchemaArrays: {
+                    '/route1': [ schemaWithoutRoutes ]
+                }
+            }
+            
+            mockNet.createServer.mockReturnValueOnce( createMockServer( { listenSuccess: true } ) )
+            mockDeployAdvanced.start.mockReturnValueOnce( true )
+            
+            await CommunityServer.start( config )
+            
+            expect( mockDeployAdvanced.start ).toHaveBeenCalled()
+        } )
+    } )
+
 } )
