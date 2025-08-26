@@ -1,4 +1,5 @@
 import { getArrayOfSchemas } from './custom-schemas/helpers/utils.mjs'
+import { FlowMCP } from 'flowmcp'
 
 
 const serverConfig = {
@@ -81,7 +82,7 @@ const serverConfig = {
             'routePath': '/inseight',
             'name': 'Inseight - A SEI Blockchain MCP Server',
             'description': 'Provides access to the SEI Blockchain for search and redirect functionality.',
-            'bearerIsPublic': true,
+            'bearerIsPublic': false,
             'protocol': 'sse',
             'schemas': async () => {
                 const { schema: spaceid } = await import( 'schemaImporter/schemas/v1.2.0/spaceid/spaceid.mjs' )
@@ -91,6 +92,8 @@ const serverConfig = {
                 const { filteredArrayOfSchemas } = FlowMCP
                     .filterArrayOfSchemas( { 
                         arrayOfSchemas, 
+                        includeNamespaces: [],
+                        excludeNamespaces: [],
                         activateTags: [ 'ens.resolveName', 'ens.lookupAddress', 'simdune.getTokenInfo' ] 
                     } )
                 return { arrayOfSchemas: filteredArrayOfSchemas }

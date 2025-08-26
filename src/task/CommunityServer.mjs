@@ -41,41 +41,42 @@ class CommunityServer {
         await CommunityServer.#checkPortAvailability( { serverPort } )
         
         CommunityServer
-            .setHTML( { app, serverConfig, serverUrl, managerVersion } )
+            .setHTML( { app, serverConfig, serverUrl, managerVersion, objectOfSchemaArrays, silent } )
         
-        // Map route schemas from objectOfSchemaArrays to routes and collect all schemas
-        let allSchemas = []
-        const routesWithSchemas = routes
+        // Prepare routes for new DeployAdvanced API (v1.4.x)
+        const arrayOfRoutes = routes
             .map( ( route ) => {
-                const { routePath } = route
+                const { routePath, protocol = 'sse', bearerToken } = route
                 const schemasForRoute = objectOfSchemaArrays[ routePath ] || []
                 
                 if( schemasForRoute.length === 0 && !silent ) {
                     console.warn( `⚠️  No schemas found for route ${routePath}` )
                 }
                 
-                // Collect all schemas for DeployAdvanced (which expects arrayOfSchemas)
-                allSchemas = allSchemas.concat( schemasForRoute )
-                
                 return {
-                    ...route,
-                    schemas: schemasForRoute
+                    routePath,
+                    protocol,
+                    bearerToken
                 }
             } )
         
-        // Remove duplicates from allSchemas
-        allSchemas = allSchemas
-            .filter( ( schema, index, self ) =>
-                index === self.findIndex( s => (s?.name === schema?.name && s?.namespace === schema?.namespace) )
-            )
+        // Calculate total schemas for logging
+        const totalSchemas = Object.values( objectOfSchemaArrays )
+            .reduce( ( total, schemas ) => total + schemas.length, 0 )
         
         if( !silent ) {
-            console.log( `🔧 Collected ${allSchemas.length} unique schemas across ${routes.length} routes` )
+            console.log( `🔧 Prepared ${totalSchemas} schemas across ${routes.length} routes for route-specific deployment` )
         }
         
         try {
             DeployAdvanced
-                .start( { routes, arrayOfSchemas: allSchemas, envObject, rootUrl, serverPort } )
+                .start( { 
+                    arrayOfRoutes, 
+                    objectOfSchemaArrays, 
+                    envObject, 
+                    rootUrl, 
+                    serverPort 
+                } )
         } catch( error ) {
             if( error.code === 'EADDRINUSE' || error.message.includes( 'EADDRINUSE' ) ) {
                 console.error( `❌ Port ${serverPort} is already in use!` )
@@ -92,7 +93,7 @@ class CommunityServer {
     }
 
 
-    static setHTML( { app, serverConfig, serverUrl, managerVersion } ) {
+    static setHTML( { app, serverConfig, serverUrl, managerVersion, objectOfSchemaArrays = {}, silent = false } ) {
         const { landingPage: { name, description }, routes } = serverConfig
 
         const preparedRoutes = routes
@@ -109,7 +110,14 @@ class CommunityServer {
             .forEach( ( route ) => {
                 const { name, description, routePath, urlSse, bearer } = route
                 const currentRoute = routes.find( r => r.routePath === routePath )
-                this.#addLRouteLandingPage( { app, routePath, name, description, urlSse, bearer, currentRoute } )
+                const routeSchemas = objectOfSchemaArrays[ routePath ] || []
+                if( !silent ) {
+                    console.log( `🔍 Route ${routePath}: ${routeSchemas.length} schemas found` )
+                    routeSchemas.forEach( ( schema, i ) => {
+                        console.log( `   ${i+1}. ${schema.namespace}:${schema.name}` )
+                    } )
+                }
+                this.#addLRouteLandingPage( { app, routePath, name, description, urlSse, bearer, currentRoute, routeSchemas } )
             } )
     }
 
@@ -151,21 +159,30 @@ class CommunityServer {
         })
     }
 
-    static #addLRouteLandingPage({ app, routePath, name, description, urlSse, bearer, currentRoute } ) {
+    static #addLRouteLandingPage({ app, routePath, name, description, urlSse, bearer, currentRoute, routeSchemas = [] } ) {
         app.get(routePath, (req, res) => {
             try {
                 const filePath = path.join(__dirname, './../public', 'detail.html')
                 
-                const { schemas = [], activateTags = [], includeNamespaces = [] } = currentRoute || {}
+                const { activateTags = [], includeNamespaces = [] } = currentRoute || {}
                 let availableMethods = []
                 
-                // Use actual schemas if available
-                if( schemas.length > 0 ) {
-                    availableMethods = schemas
-                        .map( schema => {
-                            const name = schema?.name || schema?.info?.name || 'Unknown Tool'
-                            const description = schema?.description || schema?.info?.description || 'No description available'
-                            return `<li><strong>${name}</strong> - ${description}</li>`
+                // Use actual schemas if available - show individual tools
+                if( routeSchemas.length > 0 ) {
+                    availableMethods = routeSchemas
+                        .flatMap( schema => {
+                            const namespace = schema?.namespace || 'unknown'
+                            if( schema?.routes && typeof schema.routes === 'object' ) {
+                                return Object.entries( schema.routes ).map( ( [ routeKey, routeConfig ] ) => {
+                                    const name = `${namespace}.${routeKey}` || 'Unknown Tool'
+                                    const description = routeConfig?.description || 'No description available'
+                                    return `<li><strong>${name}</strong> - ${description}</li>`
+                                } )
+                            } else {
+                                const name = schema?.name || schema?.info?.name || 'Unknown Tool'
+                                const description = schema?.description || schema?.info?.description || 'No description available'
+                                return [`<li><strong>${namespace}.${name}</strong> - ${description}</li>`]
+                            }
                         } )
                 } else if( activateTags.length > 0 ) {
                     availableMethods = activateTags
