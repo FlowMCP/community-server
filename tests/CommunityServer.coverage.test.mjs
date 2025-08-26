@@ -154,7 +154,7 @@ describe( 'CommunityServer Coverage Tests', () => {
             await CommunityServer.start( config )
             
             expect( consoleSpy.log ).toHaveBeenCalledWith( '✅ Port 8080 is available' )
-            expect( consoleSpy.log ).toHaveBeenCalledWith( '🔧 Collected 1 unique schemas across 1 routes' )
+            expect( consoleSpy.log ).toHaveBeenCalledWith( '🔧 Prepared 1 schemas across 1 routes for route-specific deployment' )
         } )
 
         test( 'should suppress logging when silent is true', async () => {
@@ -374,7 +374,7 @@ describe( 'CommunityServer Coverage Tests', () => {
             await CommunityServer.start( config )
             
             expect( consoleSpy.warn ).toHaveBeenCalledWith( '⚠️  No schemas found for route /route1' )
-            expect( consoleSpy.log ).toHaveBeenCalledWith( '🔧 Collected 0 unique schemas across 1 routes' )
+            expect( consoleSpy.log ).toHaveBeenCalledWith( '🔧 Prepared 0 schemas across 1 routes for route-specific deployment' )
         } )
 
         test( 'should handle duplicate schema removal', async () => {
@@ -401,7 +401,7 @@ describe( 'CommunityServer Coverage Tests', () => {
             
             await CommunityServer.start( config )
             
-            expect( consoleSpy.log ).toHaveBeenCalledWith( '🔧 Collected 1 unique schemas across 2 routes' )
+            expect( consoleSpy.log ).toHaveBeenCalledWith( '🔧 Prepared 2 schemas across 2 routes for route-specific deployment' )
         } )
 
         test( 'should handle schemas with partial properties', async () => {
@@ -425,7 +425,7 @@ describe( 'CommunityServer Coverage Tests', () => {
             await CommunityServer.start( config )
             
             // Should still process schemas even with incomplete ones
-            expect( consoleSpy.log ).toHaveBeenCalledWith( expect.stringContaining( 'unique schemas' ) )
+            expect( consoleSpy.log ).toHaveBeenCalledWith( expect.stringContaining( 'Prepared' ) )
         } )
     } )
 

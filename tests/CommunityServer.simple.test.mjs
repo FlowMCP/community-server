@@ -83,7 +83,7 @@ describe( 'CommunityServer Simple Coverage Tests', () => {
             
             await CommunityServer.start( config )
             
-            expect( consoleSpy.log ).toHaveBeenCalledWith( '🔧 Collected 1 unique schemas across 1 routes' )
+            expect( consoleSpy.log ).toHaveBeenCalledWith( '🔧 Prepared 1 schemas across 1 routes for route-specific deployment' )
         } )
 
         test( 'should suppress console output when silent is true', async () => {

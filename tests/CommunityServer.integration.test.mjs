@@ -192,13 +192,21 @@ describe( 'CommunityServer Integration Tests', () => {
             
             expect( mockDeployAdvanced.start ).toHaveBeenCalledWith( 
                 expect.objectContaining( {
-                    routes: expect.any( Array ),
-                    arrayOfSchemas: expect.arrayContaining( [
+                    arrayOfRoutes: expect.arrayContaining( [
                         expect.objectContaining( {
-                            name: 'test-schema',
-                            namespace: 'test'
+                            routePath: '/test-route',
+                            protocol: 'sse',
+                            bearerToken: 'test-token'
                         } )
                     ] ),
+                    objectOfSchemaArrays: expect.objectContaining( {
+                        '/test-route': expect.arrayContaining( [
+                            expect.objectContaining( {
+                                name: 'test-schema',
+                                namespace: 'test'
+                            } )
+                        ] )
+                    } ),
                     envObject: testConfig.envObject,
                     rootUrl: 'http://localhost',
                     serverPort: '8080'
@@ -226,10 +234,18 @@ describe( 'CommunityServer Integration Tests', () => {
             
             expect( mockDeployAdvanced.start ).toHaveBeenCalledWith( 
                 expect.objectContaining( {
-                    arrayOfSchemas: expect.arrayContaining( [
-                        expect.objectContaining( { name: 'schema1', namespace: 'ns1' } ),
-                        expect.objectContaining( { name: 'schema2', namespace: 'ns2' } )
-                    ] )
+                    arrayOfRoutes: expect.arrayContaining( [
+                        expect.objectContaining( { routePath: '/route1' } ),
+                        expect.objectContaining( { routePath: '/route2' } )
+                    ] ),
+                    objectOfSchemaArrays: expect.objectContaining( {
+                        '/route1': expect.arrayContaining( [
+                            expect.objectContaining( { name: 'schema1', namespace: 'ns1' } )
+                        ] ),
+                        '/route2': expect.arrayContaining( [
+                            expect.objectContaining( { name: 'schema2', namespace: 'ns2' } )
+                        ] )
+                    } )
                 } )
             )
         } )
@@ -253,10 +269,14 @@ describe( 'CommunityServer Integration Tests', () => {
             await CommunityServer.start( duplicateSchemaConfig )
             
             const startCall = mockDeployAdvanced.start.mock.calls[0][0]
-            const uniqueSchemas = startCall.arrayOfSchemas.filter( 
-                s => s.name === 'shared-schema' && s.namespace === 'shared' 
-            )
-            expect( uniqueSchemas ).toHaveLength( 1 )
+            
+            // Check that both routes have the schema (no deduplication in new API)
+            expect( startCall.objectOfSchemaArrays['/route1'] ).toEqual( [
+                expect.objectContaining( { name: 'shared-schema', namespace: 'shared' } )
+            ] )
+            expect( startCall.objectOfSchemaArrays['/route2'] ).toEqual( [
+                expect.objectContaining( { name: 'shared-schema', namespace: 'shared' } )
+            ] )
         } )
     } )
 

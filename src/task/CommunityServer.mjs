@@ -114,7 +114,9 @@ class CommunityServer {
                 if( !silent ) {
                     console.log( `🔍 Route ${routePath}: ${routeSchemas.length} schemas found` )
                     routeSchemas.forEach( ( schema, i ) => {
-                        console.log( `   ${i+1}. ${schema.namespace}:${schema.name}` )
+                        const namespace = schema?.namespace || 'unknown'
+                        const name = schema?.name || 'unnamed'
+                        console.log( `   ${i+1}. ${namespace}:${name}` )
                     } )
                 }
                 this.#addLRouteLandingPage( { app, routePath, name, description, urlSse, bearer, currentRoute, routeSchemas } )
