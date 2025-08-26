@@ -94,12 +94,12 @@ tests/
 
 ## 📊 Current Stats
 
-- **Version**: 0.7.2
+- **Version**: 0.8.0
 - **Node.js**: 22.x 
 - **Test Suites**: 15 suites
 - **Total Tests**: 186 tests
 - **Success Rate**: 100%
-- **Last Updated**: 2025-08-25
+- **Last Updated**: 2025-08-26
 
 ## 🤝 Contributing
 
