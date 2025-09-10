@@ -8,7 +8,7 @@ describe( 'ServerManager Clean Tests', () => {
             const testEnvObject = {
                 'SERVER_URL': 'http://localhost',
                 'SERVER_PORT': '8080', 
-                'BEARER_TOKEN__0': 'test-clean-token'
+                'BEARER_TOKEN_EERC20': 'test-clean-token'
             }
 
             const testServerConfig = {
@@ -20,7 +20,11 @@ describe( 'ServerManager Clean Tests', () => {
                     {
                         'routePath': '/clean/sse',
                         'name': 'SSE endpoint for testing',
-                        'bearerTokenName': 'BEARER_TOKEN__0'
+                        'auth': {
+                            'enabled': true,
+                            'authType': 'staticBearer',
+                            'token': 'BEARER_TOKEN_EERC20'
+                        }
                     }
                 ]
             }
@@ -30,7 +34,7 @@ describe( 'ServerManager Clean Tests', () => {
             expect(testEnvObject.SERVER_URL).toBe('http://localhost')
             expect(testServerConfig.routes).toHaveLength(1)
             expect(testServerConfig.routes[0].routePath).toBe('/clean/sse')
-            expect(testServerConfig.routes[0].bearerTokenName).toBe('BEARER_TOKEN__0')
+            expect(testServerConfig.routes[0].auth.token).toBe('BEARER_TOKEN_EERC20')
             
             // Test URL construction logic
             const expectedUrl = `${testEnvObject.SERVER_URL}:${testEnvObject.SERVER_PORT}/clean/sse`
@@ -61,34 +65,53 @@ describe( 'ServerManager Clean Tests', () => {
     })
 
 
-    describe('Bearer token configuration', () => {
-        test('should handle bearer token replacement logic', () => {
+    describe('Modern auth configuration', () => {
+        test('should handle auth middleware config creation', () => {
+            const activeRoutes = [
+                {
+                    routePath: '/eerc20',
+                    auth: {
+                        enabled: true,
+                        authType: 'staticBearer',
+                        token: 'BEARER_TOKEN_EERC20'
+                    }
+                }
+            ]
+
             const envObject = {
-                'BEARER_TOKEN__0': 'clean-test-token',
-                'BEARER_TOKEN__1': 'another-clean-token'
+                'BEARER_TOKEN_EERC20': 'clean-test-token'
             }
 
-            const { serverConfig } = ServerManager.getServerConfig({ envObject })
-
-            // Should have processed bearer tokens
-            expect(serverConfig.routes).toBeDefined()
-            expect(serverConfig.routes.length).toBeGreaterThan(0)
-            
-            // Each route should have a bearer token
-            serverConfig.routes.forEach(route => {
-                expect(route).toHaveProperty('bearerToken')
-                expect(typeof route.bearerToken).toBe('string')
+            const { mcpAuthMiddlewareConfig } = ServerManager.getMcpAuthMiddlewareConfig({ 
+                activeRoutes, 
+                envObject, 
+                silent: true 
             })
+
+            expect(mcpAuthMiddlewareConfig).toBeDefined()
+            expect(mcpAuthMiddlewareConfig.routes['/eerc20']).toBeDefined()
+            expect(mcpAuthMiddlewareConfig.routes['/eerc20'].token).toBe('clean-test-token')
         })
 
-        test('should handle missing bearer tokens gracefully', () => {
-            const envObject = {} // No bearer tokens
+        test('should handle disabled auth routes gracefully', () => {
+            const activeRoutes = [
+                {
+                    routePath: '/lukso',
+                    auth: {
+                        enabled: false
+                    }
+                }
+            ]
 
-            const { serverConfig } = ServerManager.getServerConfig({ envObject })
+            const envObject = {}
 
-            // Should still work with default tokens
-            expect(serverConfig.routes).toBeDefined()
-            expect(serverConfig.landingPage.name).toBe('FlowMCP Community Servers')
+            const { mcpAuthMiddlewareConfig } = ServerManager.getMcpAuthMiddlewareConfig({ 
+                activeRoutes, 
+                envObject, 
+                silent: true 
+            })
+
+            expect(mcpAuthMiddlewareConfig.routes).toEqual({})
         })
     })
 
@@ -98,7 +121,7 @@ describe( 'ServerManager Clean Tests', () => {
             const mockEnvObject = {
                 'SERVER_URL': 'http://localhost',
                 'SERVER_PORT': '3000',
-                'BEARER_TOKEN__0': 'test-token'
+                'BEARER_TOKEN_EERC20': 'test-token'
             }
 
             expect(mockEnvObject).toBeDefined()
@@ -115,15 +138,15 @@ describe( 'ServerManager Clean Tests', () => {
             const testCases = [
                 {
                     name: 'development environment',
-                    env: { SERVER_URL: 'http://localhost', SERVER_PORT: '3000', BEARER_TOKEN__0: 'dev-token' }
+                    env: { SERVER_URL: 'http://localhost', SERVER_PORT: '3000', BEARER_TOKEN_EERC20: 'dev-token' }
                 },
                 {
                     name: 'test environment', 
-                    env: { SERVER_URL: 'http://test.local', SERVER_PORT: '8080', BEARER_TOKEN__0: 'test-token' }
+                    env: { SERVER_URL: 'http://test.local', SERVER_PORT: '8080', BEARER_TOKEN_EERC20: 'test-token' }
                 },
                 {
                     name: 'production environment',
-                    env: { SERVER_URL: 'https://api.example.com', SERVER_PORT: '443', BEARER_TOKEN__0: 'prod-token' }
+                    env: { SERVER_URL: 'https://api.example.com', SERVER_PORT: '443', BEARER_TOKEN_EERC20: 'prod-token' }
                 }
             ]
             
@@ -132,7 +155,7 @@ describe( 'ServerManager Clean Tests', () => {
                 expect(typeof env).toBe('object')
                 expect(env.SERVER_URL).toMatch(/^https?:\/\//)
                 expect(env.SERVER_PORT).toMatch(/^\d+$/)
-                expect(typeof env.BEARER_TOKEN__0).toBe('string')
+                expect(typeof env.BEARER_TOKEN_EERC20).toBe('string')
             })
         })
     })
@@ -206,14 +229,18 @@ describe( 'ServerManager Clean Tests', () => {
             const cleanRouteConfig = {
                 routePath: '/clean/sse',
                 name: 'SSE endpoint for testing',
-                bearerTokenName: 'BEARER_TOKEN__0',
+                auth: {
+                    enabled: true,
+                    authType: 'staticBearer',
+                    token: 'BEARER_TOKEN_EERC20'
+                },
                 method: 'GET',
                 contentType: 'text/event-stream'
             }
 
             expect(cleanRouteConfig.routePath).toBe('/clean/sse')
             expect(cleanRouteConfig.name).toContain('SSE')
-            expect(cleanRouteConfig.bearerTokenName).toBe('BEARER_TOKEN__0')
+            expect(cleanRouteConfig.auth.token).toBe('BEARER_TOKEN_EERC20')
             expect(cleanRouteConfig.method).toBe('GET')
             expect(cleanRouteConfig.contentType).toBe('text/event-stream')
         })

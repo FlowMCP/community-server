@@ -1,5 +1,6 @@
 import { Deploy, DeployAdvanced } from 'flowmcpServers'
 import { X402Middleware } from 'x402-mcp-middleware'
+import { McpAuthMiddleware } from 'mcpAuthMiddleware'
 
 import fs from 'fs'
 import path from 'path'
@@ -11,9 +12,16 @@ const __dirname = path.dirname( __filename )
 
 
 class CommunityServer {
-    static async start( { silent, stageType, objectOfSchemaArrays, serverConfig, envObject, managerVersion, x402Config, x402Credentials, x402PrivateKey } ) {
+    static async start( { silent, stageType, objectOfSchemaArrays, serverConfig, mcpAuthMiddlewareConfig, envObject, managerVersion, x402Config, x402Credentials, x402PrivateKey } ) {
         const { app, mcps, events, argv, server } = DeployAdvanced
             .init( { silent } )
+        
+        // Create and apply auth middleware if config is provided
+        if( mcpAuthMiddlewareConfig ) {
+            const authMiddleware = await McpAuthMiddleware
+                .create( mcpAuthMiddlewareConfig )
+            app.use( authMiddleware.router() )
+        }
         
         if( stageType !== 'test' ) {
             const { chainId, chainName, contracts, paymentOptions, restrictedCalls } = x402Config
@@ -46,7 +54,7 @@ class CommunityServer {
         // Prepare routes for new DeployAdvanced API (v1.4.x)
         const arrayOfRoutes = routes
             .map( ( route ) => {
-                const { routePath, protocol = 'sse', bearerToken } = route
+                const { routePath, protocol = 'sse' } = route
                 const schemasForRoute = objectOfSchemaArrays[ routePath ] || []
                 
                 if( schemasForRoute.length === 0 && !silent ) {
@@ -55,8 +63,7 @@ class CommunityServer {
                 
                 return {
                     routePath,
-                    protocol,
-                    bearerToken
+                    protocol
                 }
             } )
         
@@ -98,10 +105,10 @@ class CommunityServer {
 
         const preparedRoutes = routes
             .map( ( route ) => {
-                const { name, description, routePath, bearerIsPublic, bearerToken } = route
+                const { name, description, routePath, auth } = route
                 const url = new URL( routePath, serverUrl )
                 const urlSse = url + '/sse'
-                const bearer = !bearerIsPublic ? '***' : bearerToken || ''
+                const bearer = auth?.enabled ? '***' : ''
                 return { name, description, routePath, url, bearer, urlSse }
             } )
 

@@ -3,59 +3,84 @@ import { jest } from '@jest/globals'
 
 describe('ServerManager - Additional Edge Case Tests', () => {
 
-    describe('getServerConfig() method edge cases', () => {
-        test('should return base serverConfig with bearer tokens', () => {
+    describe('getMcpAuthMiddlewareConfig() advanced edge cases', () => {
+        test('should handle mixed auth types in single config', () => {
+            const activeRoutes = [
+                {
+                    routePath: '/eerc20',
+                    auth: {
+                        enabled: true,
+                        authType: 'staticBearer',
+                        token: 'BEARER_TOKEN_EERC20'
+                    }
+                },
+                {
+                    routePath: '/etherscan-ping',
+                    auth: {
+                        enabled: true,
+                        authType: 'oauth21_auth0',
+                        providerUrl: 'https://{{AUTH0_DOMAIN}}',
+                        clientId: '{{AUTH0_CLIENT_ID}}'
+                    }
+                }
+            ]
+
             const envObject = {
-                'BEARER_TOKEN_1': 'replaced-token-123',
-                'OTHER_VAR': 'other_value'
+                'BEARER_TOKEN_EERC20': 'test-bearer-token',
+                'AUTH0_DOMAIN': 'dev-test.auth0.com',
+                'AUTH0_CLIENT_ID': 'test-client-123'
             }
 
-            const { serverConfig: result } = ServerManager.getServerConfig({ envObject })
+            const { mcpAuthMiddlewareConfig } = ServerManager.getMcpAuthMiddlewareConfig({ 
+                activeRoutes, 
+                envObject, 
+                silent: true 
+            })
 
-            // Verify structure exists
-            expect(result).toBeDefined()
-            expect(result.landingPage).toBeDefined()
-            expect(result.routes).toBeDefined()
-            expect(Array.isArray(result.routes)).toBe(true)
+            // Verify both auth types are handled correctly
+            expect(mcpAuthMiddlewareConfig.routes['/eerc20']).toBeDefined()
+            expect(mcpAuthMiddlewareConfig.routes['/eerc20'].authType).toBe('staticBearer')
+            expect(mcpAuthMiddlewareConfig.routes['/eerc20'].token).toBe('test-bearer-token')
             
-            // Verify landing page structure
-            expect(result.landingPage.name).toBe('FlowMCP Community Servers')
-            expect(result.landingPage.description).toContain('Community servers for the FlowMCP project')
-            
-            // Verify routes exist
-            expect(result.routes.length).toBeGreaterThan(0)
-            expect(result.routes[0]).toHaveProperty('routePath')
-            expect(result.routes[0]).toHaveProperty('name')
+            expect(mcpAuthMiddlewareConfig.routes['/etherscan-ping']).toBeDefined()
+            expect(mcpAuthMiddlewareConfig.routes['/etherscan-ping'].authType).toBe('oauth21_auth0')
+            expect(mcpAuthMiddlewareConfig.routes['/etherscan-ping'].providerUrl).toBe('https://dev-test.auth0.com')
         })
 
-        test('should handle empty environment object', () => {
+        test('should handle routes with auth disabled', () => {
+            const activeRoutes = [
+                {
+                    routePath: '/public-route',
+                    auth: {
+                        enabled: false
+                    }
+                }
+            ]
+
             const envObject = {}
 
-            const { serverConfig: result } = ServerManager.getServerConfig({ envObject })
-
-            // Should still return valid structure with default tokens
-            expect(result.landingPage.name).toBe('FlowMCP Community Servers')
-            expect(result.routes.length).toBeGreaterThan(0)
-            
-            // Should have default bearer tokens
-            result.routes.forEach(route => {
-                expect(route.bearerToken).toMatch(/default-token-\d+/)
+            const { mcpAuthMiddlewareConfig } = ServerManager.getMcpAuthMiddlewareConfig({ 
+                activeRoutes, 
+                envObject, 
+                silent: true 
             })
+
+            // Should not include routes with disabled auth
+            expect(mcpAuthMiddlewareConfig.routes['/public-route']).toBeUndefined()
+            expect(Object.keys(mcpAuthMiddlewareConfig.routes)).toHaveLength(0)
         })
 
-        test('should preserve bearer token structure', () => {
-            const envObject = {
-                'CUSTOM_TOKEN': 'custom-value'
-            }
+        test('should preserve silent flag configuration', () => {
+            const activeRoutes = []
+            const envObject = {}
 
-            const { serverConfig: result } = ServerManager.getServerConfig({ envObject })
-
-            // Should preserve bearer token structure
-            result.routes.forEach(route => {
-                expect(route).toHaveProperty('bearerToken')
-                expect(typeof route.bearerToken).toBe('string')
-                expect(route.bearerToken.length).toBeGreaterThan(0)
+            const { mcpAuthMiddlewareConfig } = ServerManager.getMcpAuthMiddlewareConfig({ 
+                activeRoutes, 
+                envObject, 
+                silent: false 
             })
+
+            expect(mcpAuthMiddlewareConfig.silent).toBe(false)
         })
     })
 

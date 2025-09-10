@@ -195,8 +195,7 @@ describe( 'CommunityServer Integration Tests', () => {
                     arrayOfRoutes: expect.arrayContaining( [
                         expect.objectContaining( {
                             routePath: '/test-route',
-                            protocol: 'sse',
-                            bearerToken: 'test-token'
+                            protocol: 'sse'
                         } )
                     ] ),
                     objectOfSchemaArrays: expect.objectContaining( {

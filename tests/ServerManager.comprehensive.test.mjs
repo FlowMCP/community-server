@@ -9,13 +9,13 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
         test( 'should extract webhook environment variables from test stage', () => {
             const { webhookSecret, webhookPort, pm2Name } = ServerManager.getWebhookEnv( { stageType: 'test', serverConfig } )
             
-            expect( webhookSecret ).toBe( 'test-webhook-secret-123' )
-            expect( webhookPort ).toBe( '3007' )
-            expect( pm2Name ).toBe( 'test-community-server' )
+            expect( webhookSecret ).toBe( 'your-webhook-secret-here' )
+            expect( webhookPort ).toBe( '3001' )
+            expect( pm2Name ).toBe( 'community-server' )
         } )
 
-        test( 'should handle development stage', () => {
-            const result = ServerManager.getWebhookEnv( { stageType: 'development-test', serverConfig } )
+        test( 'should handle test stage', () => {
+            const result = ServerManager.getWebhookEnv( { stageType: 'test', serverConfig } )
             
             expect( result ).toBeDefined()
             expect( typeof result ).toBe( 'object' )
@@ -85,66 +85,97 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
     } )
 
 
-    describe( 'getServerConfig() method', () => {
-        test( 'should replace bearer tokens from envObject', () => {
-            const envObject = {
-                'BEARER_TOKEN__0': 'custom-eerc20-token',
-                'BEARER_TOKEN__1': 'custom-agentpays-token',
-                'BEARER_TOKEN__2': 'custom-lukso-token',
-                'BEARER_TOKEN__3': 'custom-chainlink-token'
-            }
-            
-            const { serverConfig } = ServerManager.getServerConfig( { envObject } )
-            
-            expect( serverConfig ).toBeDefined()
-            expect( serverConfig.routes ).toBeDefined()
-            expect( Array.isArray( serverConfig.routes ) ).toBe( true )
-            
-            expect( serverConfig.routes[ 0 ].bearerToken ).toBe( 'custom-eerc20-token' )
-            expect( serverConfig.routes[ 1 ].bearerToken ).toBe( 'custom-agentpays-token' )
-            expect( serverConfig.routes[ 2 ].bearerToken ).toBe( 'custom-lukso-token' )
-            expect( serverConfig.routes[ 3 ].bearerToken ).toBe( 'custom-chainlink-token' )
-        } )
-
-        test( 'should warn for missing bearer tokens', () => {
-            const originalWarn = console.warn
-            const warnMessages = []
-            console.warn = ( msg ) => { warnMessages.push( msg ) }
+    describe( 'getMcpAuthMiddlewareConfig() method', () => {
+        test( 'should create auth config for routes with auth enabled', () => {
+            const activeRoutes = [
+                {
+                    routePath: '/eerc20',
+                    auth: {
+                        enabled: true,
+                        authType: 'staticBearer',
+                        token: 'BEARER_TOKEN_EERC20'
+                    }
+                },
+                {
+                    routePath: '/lukso',
+                    auth: {
+                        enabled: false
+                    }
+                }
+            ]
             
             const envObject = {
-                'BEARER_TOKEN__0': 'only-first-token'
-                // Missing other tokens
+                'BEARER_TOKEN_EERC20': 'test-eerc20-token'
             }
             
-            const { serverConfig } = ServerManager.getServerConfig( { envObject } )
+            const { mcpAuthMiddlewareConfig } = ServerManager.getMcpAuthMiddlewareConfig( { 
+                activeRoutes, 
+                envObject, 
+                silent: true 
+            } )
             
-            expect( warnMessages ).toContain( 'Missing BEARER_TOKEN__1 in .env file' )
-            expect( warnMessages ).toContain( 'Missing BEARER_TOKEN__2 in .env file' )
-            expect( warnMessages ).toContain( 'Missing BEARER_TOKEN__3 in .env file' )
-            
-            expect( serverConfig.routes[ 0 ].bearerToken ).toBe( 'only-first-token' )
-            // Check that routes without custom tokens get default values
-            expect( serverConfig.routes[ 1 ].bearerToken ).toBe( 'default-token-1' )
-            expect( serverConfig.routes[ 2 ].bearerToken ).toBe( 'default-token-2' )
-            expect( serverConfig.routes[ 3 ].bearerToken ).toBe( 'default-token-3' )
-            
-            console.warn = originalWarn
+            expect( mcpAuthMiddlewareConfig ).toBeDefined()
+            expect( mcpAuthMiddlewareConfig.routes ).toBeDefined()
+            expect( mcpAuthMiddlewareConfig.routes[ '/eerc20' ] ).toBeDefined()
+            expect( mcpAuthMiddlewareConfig.routes[ '/eerc20' ].authType ).toBe( 'staticBearer' )
+            expect( mcpAuthMiddlewareConfig.routes[ '/eerc20' ].token ).toBe( 'test-eerc20-token' )
+            expect( mcpAuthMiddlewareConfig.routes[ '/lukso' ] ).toBeUndefined()
         } )
 
-        test( 'should preserve original serverConfig structure', () => {
-            const originalWarn = console.warn
-            console.warn = () => {} // Suppress warnings for clean output
+        test( 'should handle OAuth2 Auth0 configuration with template variables', () => {
+            const activeRoutes = [
+                {
+                    routePath: '/etherscan-ping',
+                    auth: {
+                        enabled: true,
+                        authType: 'oauth21_auth0',
+                        providerUrl: 'https://{{AUTH0_DOMAIN}}',
+                        clientId: '{{AUTH0_CLIENT_ID}}',
+                        clientSecret: '{{AUTH0_CLIENT_SECRET}}'
+                    }
+                }
+            ]
+            
+            const envObject = {
+                'AUTH0_DOMAIN': 'dev-example.us.auth0.com',
+                'AUTH0_CLIENT_ID': 'test-client-id',
+                'AUTH0_CLIENT_SECRET': 'test-client-secret'
+            }
+            
+            const { mcpAuthMiddlewareConfig } = ServerManager.getMcpAuthMiddlewareConfig( { 
+                activeRoutes, 
+                envObject, 
+                silent: true 
+            } )
+            
+            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping' ] ).toBeDefined()
+            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping' ].authType ).toBe( 'oauth21_auth0' )
+            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping' ].providerUrl ).toBe( 'https://dev-example.us.auth0.com' )
+            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping' ].clientId ).toBe( 'test-client-id' )
+            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping' ].clientSecret ).toBe( 'test-client-secret' )
+        } )
+
+        test( 'should throw error for missing environment variables', () => {
+            const activeRoutes = [
+                {
+                    routePath: '/eerc20',
+                    auth: {
+                        enabled: true,
+                        authType: 'staticBearer',
+                        token: 'MISSING_TOKEN'
+                    }
+                }
+            ]
             
             const envObject = {}
             
-            const { serverConfig } = ServerManager.getServerConfig( { envObject } )
-            
-            expect( serverConfig.landingPage ).toBeDefined()
-            expect( serverConfig.landingPage.name ).toBe( 'FlowMCP Community Servers' )
-            expect( serverConfig.x402 ).toBeDefined()
-            expect( serverConfig.x402.chainId ).toBe( 84532 )
-            
-            console.warn = originalWarn
+            expect( () => {
+                ServerManager.getMcpAuthMiddlewareConfig( { 
+                    activeRoutes, 
+                    envObject, 
+                    silent: true 
+                } )
+            } ).toThrow( 'MCP Auth configuration errors: Missing environment variable: MISSING_TOKEN' )
         } )
     } )
 
@@ -156,12 +187,12 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
             expect( envObject ).toBeDefined()
             expect( typeof envObject ).toBe( 'object' )
             
-            expect( envObject[ 'WEBHOOK_SECRET' ] ).toBe( 'test-webhook-secret-123' )
-            expect( envObject[ 'WEBHOOK_PORT' ] ).toBe( '3007' )
-            expect( envObject[ 'PM2_NAME' ] ).toBe( 'test-community-server' )
-            // GitHub Actions uses different token value than local .test.env file
-            expect( envObject[ 'BEARER_TOKEN__0' ] ).toMatch( /^test-(eerc20|avalanche)-token$/ )
-            expect( envObject[ 'ACCOUNT_DEVELOPMENT2_PRIVATE_KEY' ] ).toBe( '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12' )
+            expect( envObject[ 'WEBHOOK_SECRET' ] ).toBe( 'your-webhook-secret-here' )
+            expect( envObject[ 'WEBHOOK_PORT' ] ).toBe( '3001' )
+            expect( envObject[ 'PM2_NAME' ] ).toBe( 'community-server' )
+            // Modern token naming convention
+            expect( envObject[ 'BEARER_TOKEN_EERC20' ] ).toBe( 'example-eerc20-token' )
+            expect( envObject[ 'ACCOUNT_DEVELOPMENT2_PRIVATE_KEY' ] ).toBe( '0xEXAMPLE1234567890abcdef1234567890abcdef1234567890abcdef1234567890' )
         } )
 
         test( 'should filter out comments and empty lines', () => {
@@ -172,8 +203,8 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
             expect( envObject[ '' ] ).toBeUndefined()
         } )
 
-        test( 'should handle development stage environment', () => {
-            const { envObject } = ServerManager.getEnvObject( { stageType: 'development-test', serverConfig } )
+        test( 'should handle test stage environment', () => {
+            const { envObject } = ServerManager.getEnvObject( { stageType: 'test', serverConfig } )
             
             expect( envObject ).toBeDefined()
             expect( typeof envObject ).toBe( 'object' )

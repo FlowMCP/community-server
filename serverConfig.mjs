@@ -3,11 +3,11 @@ import { FlowMCP } from 'flowmcp'
 
 
 const serverConfig = {
+    'silent': false,
     'env': {
-        'development': './../.community.env',
-        'production': './../.env', 
-        'development-test': './tests/.community.env',
-        'test': './tests/.test.env'
+        'development': '../.community.env',
+        'production': '../.community.env', 
+        'test': './.community.env.example'
     },
     'landingPage': {
         'name': 'FlowMCP Community Servers',
@@ -18,7 +18,11 @@ const serverConfig = {
             'routePath': '/eerc20',
             'name': 'Encrypted ERC20',
             'description': 'This is an experimental server for an encrypted ERC20 schema for the x402 protocol. Further information at: https://github.com/a6b8/backendshield',
-            'bearerIsPublic': false,
+            'auth': {
+                'enabled': true,
+                'authType': 'staticBearer',
+                'token': 'BEARER_TOKEN_EERC20'
+            },
             'protocol': 'sse',
             'schemas': async () => {
                 const { schema: ohlcvSchema } = await import( 'schemaImporter/schemas/v1.2.0/ohlcv/olhcv-moralis-evm.mjs' )
@@ -33,7 +37,9 @@ const serverConfig = {
             'routePath': '/x402',
             'name': 'AgentPays - MCP with M2M Payment',
             'description': "Experimental server for x402 payments using USDC on Base Sepolia. Offers payment functionality for Model Context Payment (MCP) via 'exact' scheme (EIP-3009). Use with MCP Inspector or Proxy-enabled x402 clients. More info: https://github.com/FlowMCP/x402-experiments",
-            'bearerIsPublic': true,
+            'auth': {
+                'enabled': false
+            },
             'protocol': 'sse',
             'schemas': async () => {
                 const arrayOfSchemas = await getArrayOfSchemas( {
@@ -50,7 +56,9 @@ const serverConfig = {
             'routePath': '/lukso',
             'name': 'LUKSO Network - Community MCP Server',
             'description': 'Provides access to the LUKSO Network for search and redirect functionality on mainnet and testnet.',
-            'bearerIsPublic': true,
+            'auth': {
+                'enabled': false
+            },
             'protocol': 'sse',
             'schemas':  async () => {
                 const arrayOfSchemas = await getArrayOfSchemas( {
@@ -65,7 +73,9 @@ const serverConfig = {
             'routePath': '/chainlink/prices',
             'name': 'ChainProbe - Onchain Chainlink Price Feeds for M2M Processing',
             'description': 'Serves all onchain Chainlink price feeds from an EVM chain in a single x402-enabled request. Ideal for machine-to-machine (M2M) data retrieval and autonomous agents. Payments enforced via USDC using EIP-3009 (exact scheme) on Base Sepolia.',
-            'bearerIsPublic': true,
+            'auth': {
+                'enabled': false
+            },
             'protocol': 'sse',
             'schemas': async () => {
                 const arrayOfSchemas = await getArrayOfSchemas( {
@@ -82,7 +92,11 @@ const serverConfig = {
             'routePath': '/inseight',
             'name': 'Inseight - A SEI Blockchain MCP Server',
             'description': 'Provides access to the SEI Blockchain for search and redirect functionality.',
-            'bearerIsPublic': false,
+            'auth': {
+                'enabled': true,
+                'authType': 'staticBearer',
+                'token': 'BEARER_TOKEN_INSEIGHT'
+            },
             'protocol': 'sse',
             'schemas': async () => {
                 const { schema: spaceid } = await import( 'schemaImporter/schemas/v1.2.0/spaceid/spaceid.mjs' )
@@ -97,6 +111,37 @@ const serverConfig = {
                         activateTags: [ 'ens.resolveName', 'ens.lookupAddress', 'simdune.getTokenInfo' ] 
                     } )
                 return { arrayOfSchemas: filteredArrayOfSchemas }
+            }
+        },
+        {
+            'routePath': '/etherscan-ping',
+            'name': 'Etherscan with Ping - Smart Contract Explorer with Ping',
+            'description': 'Provides access to Etherscan smart contract explorer with Bearer token authentication and ping functionality.',
+            'auth': {
+                'enabled': true,
+                'authType': 'oauth21_auth0',
+                'providerUrl': `https://{{AUTH0_DOMAIN}}`,
+                'realm': 'first-route-realm',
+                'clientId': '{{AUTH0_CLIENT_ID}}',
+                'clientSecret': '{{AUTH0_CLIENT_SECRET}}',
+                'scope': 'openid profile email',
+                'audience': 'http://localhost:3000/first-route',
+                'resourceUri': null,
+                'forceHttps': false
+            },
+            'protocol': 'sse',
+            'schemas': async () => {
+                const arrayOfSchemas = await getArrayOfSchemas( {
+                    includeNamespaces: [ 'etherscan' ],
+                    excludeNamespaces: [],
+                    activateTags: []
+                } )
+                
+                // Add ping schema
+                const { schema: pingSchema } = await import( 'schemaImporter/schemas/v1.2.0/x402/ping.mjs' )
+                arrayOfSchemas.push( pingSchema )
+                
+                return { arrayOfSchemas }
             }
         }
     ],

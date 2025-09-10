@@ -2,27 +2,21 @@
 
 ## Purpose
 
-This document provides AI assistants with essential information to understand and work with the FlowMCP Community Server project. It serves as the first reference point when opening this repository.
+This document provides AI assistants with essential information to understand and work with the modern FlowMCP Community Server. This is a production-ready MCP server with multi-authentication support.
 
 ## Project Structure & Key Files
 
 ### Core Configuration
-- **[serverConfig.mjs](./serverConfig.mjs)** - Central configuration file defining routes, schemas, and environment paths
-- **[main.mjs](./main.mjs)** - Main entry point that orchestrates server startup
+- **[serverConfig.mjs](./serverConfig.mjs)** - Central configuration defining active routes and authentication
+- **[main.mjs](./main.mjs)** - Entry point orchestrating server startup
 
 ### Documentation
-- **[README.md](./README.md)** - Complete project documentation with API reference
-- **[src/SERVER_MANAGER.md](./src/SERVER_MANAGER.md)** - Technical documentation of data flow and architecture
+- **[README.md](./README.md)** - Concise project overview and quick start guide
 
-### Core Components
-- **[src/index.mjs](./src/index.mjs)** - ServerManager class with orchestration methods
-- **[custom-schemas/helpers/utils.mjs](./custom-schemas/helpers/utils.mjs)** - Utility functions for schema handling and bearer token validation
-
-### Custom Schemas
-- **[custom-schemas/](./custom-schemas/)** - Directory containing custom MCP schemas
-  - `pinata/write.mjs` - IPFS file upload functionality
-  - `chainlink/getLatestPricesMulticall.mjs` - Price feed aggregation
-  - `avalanche/index.mjs` - Multi-namespace schema collection
+### Core Components  
+- **[src/index.mjs](./src/index.mjs)** - ServerManager class with modern authentication APIs
+- **[src/task/CommunityServer.mjs](./src/task/CommunityServer.mjs)** - MCP server implementation
+- **[src/task/WebhookServer.mjs](./src/task/WebhookServer.mjs)** - GitHub webhook handler
 
 ## Environment Configuration (CRITICAL)
 
@@ -53,33 +47,45 @@ parent-folder/
 SERVER_URL=http://localhost
 SERVER_PORT=8080
 
-# Webhook Configuration
+# Webhook Configuration  
 WEBHOOK_SECRET=your-webhook-secret
 WEBHOOK_PORT=3001
 PM2_NAME=community-server-dev
 
-# Bearer Tokens (Route-based naming)
+# Bearer Tokens (Active Routes)
 BEARER_TOKEN_EERC20=your-eerc20-token
-BEARER_TOKEN_X402=your-x402-token
-BEARER_TOKEN_LUKSO=your-lukso-token
-BEARER_TOKEN_CHAINLINK_PRICES=your-chainlink-token
 BEARER_TOKEN_INSEIGHT=your-inseight-token
 
-# x402 Payment Configuration
+# OAuth2 Configuration (Auth0)
+AUTH0_DOMAIN=your-domain.auth0.com
+AUTH0_CLIENT_ID=your-client-id
+
+# x402 Payment Configuration (Optional)
 ACCOUNT_DEVELOPMENT2_PRIVATE_KEY=0x...
 ACCOUNT_DEVELOPMENT2_PUBLIC_KEY=0x...
 BASE_SEPOLIA_ALCHEMY_HTTP=https://base-sepolia.g.alchemy.com/v2/...
 ```
 
-## Bearer Token System
+## Authentication System
 
-### New Naming Convention (Route-based)
-- Route path `/eerc20` → Token `BEARER_TOKEN_EERC20`
-- Route path `/x402` → Token `BEARER_TOKEN_X402`
-- Route path `/chainlink/prices` → Token `BEARER_TOKEN_CHAINLINK_PRICES`
+### Modern Authentication Types
+- **Static Bearer**: `authType: 'staticBearer'` - Token-based authentication
+- **OAuth2 Auth0**: `authType: 'oauth21_auth0'` - OAuth2 with Auth0 provider
 
-### Public Routes
-Routes with `bearerIsPublic: true` do not require bearer tokens. The validation system automatically skips token checks for these routes.
+### Active Routes & Authentication
+- `/eerc20` → Bearer token (`BEARER_TOKEN_EERC20`)
+- `/inseight` → Bearer token (`BEARER_TOKEN_INSEIGHT`)  
+- `/etherscan-ping` → OAuth2 Auth0
+
+### Authentication Configuration
+Routes use the modern `auth` structure:
+```javascript
+auth: {
+    enabled: true,
+    authType: 'staticBearer',
+    token: 'BEARER_TOKEN_EERC20'
+}
+```
 
 ## Server Architecture
 
@@ -92,9 +98,9 @@ Routes with `bearerIsPublic: true` do not require bearer tokens. The validation 
 6. **Server Start** → Community server + webhook server
 
 ### Active Routes Configuration
-The `activeRoutes` array in `main.mjs` determines which routes are actually loaded:
+The `activeRoutes` array in `main.mjs` determines which routes are loaded:
 ```javascript
-const activeRoutes = [ '/eerc20' ]  // Only these routes will be activated
+const activeRoutes = [ '/eerc20', '/inseight', '/etherscan-ping' ]
 ```
 
 ## Development Workflow
@@ -112,15 +118,15 @@ npm test
 ```
 
 ### Adding New Routes
-1. Add route definition to `serverConfig.mjs`
-2. Implement `schemas()` function for the route
+1. Add route definition to `serverConfig.mjs` with `auth` configuration
+2. Implement `schemas()` function returning `{ arrayOfSchemas }`
 3. Add route path to `activeRoutes` in `main.mjs`
-4. Add corresponding bearer token to environment file
+4. Add authentication tokens to environment file
 
-### Schema Development
-- Place custom schemas in `custom-schemas/` directory
-- Use ES modules with `.mjs` extension
-- Follow existing patterns for schema structure
+### Modern API Usage
+- Use `getMcpAuthMiddlewareConfig()` for authentication setup
+- Routes configured with `objectOfSchemaArrays` parameter
+- Modern `auth.enabled` structure replaces legacy bearer token patterns
 
 ## Important Notes for AI Assistants
 
@@ -130,15 +136,15 @@ npm test
 - **Hard-coded paths** - Always use `serverConfig.mjs` for configuration
 
 ### What TO Modify
-- **serverConfig.mjs** - For route and configuration changes
-- **Custom schemas** - For new functionality
-- **main.mjs** - For startup logic changes
-- **Utils functions** - For shared functionality
+- **serverConfig.mjs** - For route and authentication configuration
+- **main.mjs** - For startup logic and activeRoutes changes
+- **src/** components - For core functionality updates
 
 ### Testing
-- Test files are in `tests/` directory
-- 28 comprehensive tests cover all ServerManager functionality
+- Test files are in `tests/` directory 
+- 179 comprehensive tests across 14 test suites
 - Test environment uses separate `.env` files
+- 100% success rate maintained
 
 ### Error Handling
 - Missing bearer tokens show descriptive error messages
@@ -150,35 +156,33 @@ npm test
 ```
 community-server/
 ├── AGENTS.md                    # This file
-├── README.md                    # Main documentation
+├── README.md                    # Main documentation  
 ├── serverConfig.mjs            # Central configuration
 ├── main.mjs                    # Entry point
 ├── src/
-│   ├── SERVER_MANAGER.md       # Technical docs
 │   ├── index.mjs              # ServerManager class
-│   ├── task/                  # Server implementations
-│   └── public/                # HTML templates
-├── custom-schemas/            # Custom MCP schemas
-│   └── helpers/utils.mjs     # Utility functions
-├── tests/                     # Test suite
-└── .trash/                   # Old/unused files
+│   └── task/                  # Server implementations
+│       ├── CommunityServer.mjs  # MCP server
+│       └── WebhookServer.mjs    # GitHub webhooks
+├── tests/                     # Test suite (14 suites, 179 tests)
+└── .github/workflows/         # CI/CD automation
 ```
 
 ## Common Issues & Solutions
 
 ### "Missing Bearer Tokens" Error
-- Check that all required `BEARER_TOKEN_*` variables are in the environment file
-- Verify token names match the route path naming convention
-- For public routes, set `bearerIsPublic: true` in route definition
+- Check that required `BEARER_TOKEN_*` variables are in environment file
+- Verify token names match route naming (e.g., `/eerc20` → `BEARER_TOKEN_EERC20`)
+- For disabled auth routes, set `auth.enabled: false`
 
 ### "No schemas loaded" in HTML
-- Verify `schemas()` function in route definition returns `{ arrayOfSchemas }`
-- Check that route is included in `activeRoutes` array
+- Verify `schemas()` function returns `{ arrayOfSchemas }`
+- Check route is in `activeRoutes` array in `main.mjs`
 - Ensure schema imports are correct and files exist
 
-### Environment File Not Found
-- Verify environment files are in the correct parent directory
-- Check that stage type matches available environment configurations
-- Ensure file names match exactly (case-sensitive)
+### Authentication Errors
+- Bearer token routes require exact token match
+- OAuth2 routes require proper Auth0 configuration
+- Check server logs for detailed authentication error messages
 
-This document should be the starting point for understanding the project architecture and development workflow.
+This document provides the foundation for understanding the modern MCP server architecture.

@@ -1,12 +1,22 @@
 node_modules
 .trash
 
-# Environment files
+# Environment files (only allow example files)
 .env*
+.community.env
 !.env.example
+!.community.env.example
+
+# Coverage reports (auto-generated)
+coverage/
+*.lcov
+.nyc_output/
 
 # Secrets and keys  
 *.key
 *.pem
 secrets/
 config/production.env
+
+# MacOS files
+.DS_Store

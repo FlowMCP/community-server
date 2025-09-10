@@ -1,3 +1,4 @@
+import { env } from 'process'
 import { CommunityServer } from './task/CommunityServer.mjs'
 import { WebhookServer } from './task/WebhookServer.mjs'
 // Old imports removed - using root serverConfig.mjs now
@@ -7,25 +8,9 @@ import fs from 'fs'
 
 
 class ServerManager {
-    static async start( { silent, stageType, objectOfSchemaArrays, arrayOfSchemas, serverConfig, envObject, managerVersion, webhookSecret, webhookPort, pm2Name, x402Config, x402Credentials, x402PrivateKey } ) {
-        // Backwards compatibility: convert arrayOfSchemas to objectOfSchemaArrays if needed
-        let schemasToUse = objectOfSchemaArrays
-        
-        if( !objectOfSchemaArrays && arrayOfSchemas ) {
-            // Legacy mode: create objectOfSchemaArrays from arrayOfSchemas for all routes
-            schemasToUse = {}
-            const { routes } = serverConfig
-            routes
-                .forEach( ( route ) => {
-                    const { routePath } = route
-                    schemasToUse[ routePath ] = arrayOfSchemas
-                } )
-            
-            // Legacy support warning removed for clean test output
-        }
-        
+    static async start( { silent, stageType, objectOfSchemaArrays, serverConfig, mcpAuthMiddlewareConfig, envObject, managerVersion, webhookSecret, webhookPort, pm2Name, x402Config, x402Credentials, x402PrivateKey } ) {
         await CommunityServer
-            .start( { silent, stageType, objectOfSchemaArrays: schemasToUse, serverConfig, envObject, pm2Name, managerVersion, x402Config, x402Credentials, x402PrivateKey } )
+            .start( { silent, stageType, objectOfSchemaArrays, serverConfig, mcpAuthMiddlewareConfig, envObject, pm2Name, managerVersion, x402Config, x402Credentials, x402PrivateKey } )
 
         WebhookServer
             .start( { webhookSecret, webhookPort, pm2Name, managerVersion } )
@@ -65,6 +50,79 @@ class ServerManager {
     }
 
 
+    static getMcpAuthMiddlewareConfig( { activeRoutes, envObject, silent } ) {
+        function getEnvSecret( { key, envObject } ) {
+            let status = false
+            let messages = []
+            if( !Object.hasOwn( envObject, key ) ) {
+                messages.push( `Missing environment variable: ${key}` )
+            }
+            status = messages.length === 0
+            return { status, messages, value: envObject[ key ] }
+        }
+
+        const struct = {
+            'status': false,
+            'messages': [],
+            'mcpAuthMiddlewareConfig': {
+                silent,
+                'routes': {}
+            }
+        }
+
+        struct['mcpAuthMiddlewareConfig']['routes'] = activeRoutes
+            .reduce( ( acc, route ) => {
+                const { routePath, auth } = route
+                if( !auth.enabled ) { return acc }
+                
+                let authConfig = { ...auth }
+                delete authConfig.enabled
+
+                switch( authConfig.authType ) {
+                    case 'staticBearer':
+                        const { status, messages, value } = getEnvSecret( { key: authConfig.token, envObject } )
+                        if( !status ) { struct['messages'] = struct['messages'].concat( messages )}
+                        authConfig['token'] = value
+                        break;
+                    case 'oauth21_auth0':
+                        authConfig = Object
+                            .entries( authConfig )
+                            .reduce( ( acc, [ key, value ] ) => {
+                                if( typeof value !== 'string' ) { acc[ key ] = value; return acc }
+                                const regex = /\{\{(.*?)\}\}/
+                                const match = value.match( regex )
+
+                                if( Array.isArray( match ) && match.length >= 2 ) {
+                                    const envKey = match[ 1 ].trim()
+                                    const { status, messages, value: envValue } = getEnvSecret( { key: envKey, envObject } )
+                                    if( !status ) { struct['messages'] = struct['messages'].concat( messages ); return acc }
+                                    if( !envValue ) { struct['messages'].push( `Missing environment variable: ${envKey}` ) }
+                                    acc[ key ] = value.replace( `{{${envKey}}}`, envValue )
+                                } else {
+                                    acc[ key ] = value
+                                }
+                                return acc
+                            }, {} )
+
+                        break
+                    default:
+                        throw new Error( `Unsupported authType ${authConfig.authType} on route ${routePath}` )
+                }
+                
+                acc[ routePath ] = authConfig
+                return acc
+            }, {} )
+
+        struct['status'] = struct['messages'].length === 0
+        if( !struct['status'] ) {
+            throw new Error( `MCP Auth configuration errors: ${ struct['messages'].join( "\n" ) }` )
+        }
+        const { mcpAuthMiddlewareConfig } = struct
+
+        return { mcpAuthMiddlewareConfig }
+    }
+
+
     static getX402Credentials( { envObject, x402Config = null } ) {
         const messages = []
 
@@ -77,8 +135,8 @@ class ServerManager {
                 chainName: 'base-sepolia',
                 envSelection: [
                     [ 'facilitatorPrivateKey', 'ACCOUNT_DEVELOPMENT2_PRIVATE_KEY' ],
-                    [ 'payTo1', 'ACCOUNT_DEVELOPMENT2_PUBLIC_KEY' ],
-                    [ 'serverProviderUrl', 'BASE_SEPOLIA_ALCHEMY_HTTP' ]
+                    [ 'payTo1',                'ACCOUNT_DEVELOPMENT2_PUBLIC_KEY'  ],
+                    [ 'serverProviderUrl',     'BASE_SEPOLIA_ALCHEMY_HTTP'        ]
                 ]
             }
         }
@@ -127,61 +185,6 @@ class ServerManager {
             }, { 'x402Credentials': {}, 'x402PrivateKey': null } )
 
         return { x402Config: configToUse, x402Credentials, x402PrivateKey }
-    }
-
-
-    static getServerConfig( { envObject } ) {
-        // Legacy method for backward compatibility with tests
-        // Returns full serverConfig structure with bearer tokens replaced from envObject
-        
-        const baseConfig = {
-            landingPage: {
-                name: 'FlowMCP Community Servers',
-                description: 'Community servers for the FlowMCP project, providing access to various networks and functionalities.'
-            },
-            routes: [
-                {
-                    routePath: '/eerc20',
-                    name: 'Encrypted ERC20',
-                    bearerToken: envObject['BEARER_TOKEN__0'] || 'default-token-0'
-                },
-                {
-                    routePath: '/x402',
-                    name: 'AgentPays - MCP with M2M Payment', 
-                    bearerToken: envObject['BEARER_TOKEN__1'] || 'default-token-1'
-                },
-                {
-                    routePath: '/lukso',
-                    name: 'LUKSO Network - Community MCP Server',
-                    bearerToken: envObject['BEARER_TOKEN__2'] || 'default-token-2'
-                },
-                {
-                    routePath: '/chainlink/prices',
-                    name: 'ChainProbe - Onchain Chainlink Price Feeds',
-                    bearerToken: envObject['BEARER_TOKEN__3'] || 'default-token-3'
-                }
-            ],
-            x402: {
-                chainId: 84532,
-                chainName: 'base-sepolia',
-                envSelection: [
-                    [ 'facilitatorPrivateKey', 'ACCOUNT_DEVELOPMENT2_PRIVATE_KEY' ],
-                    [ 'payTo1', 'ACCOUNT_DEVELOPMENT2_PUBLIC_KEY' ],
-                    [ 'serverProviderUrl', 'BASE_SEPOLIA_ALCHEMY_HTTP' ]
-                ]
-            }
-        }
-
-        // Check for missing bearer tokens and warn
-        const requiredTokens = ['BEARER_TOKEN__1', 'BEARER_TOKEN__2', 'BEARER_TOKEN__3']
-        requiredTokens
-            .forEach( ( tokenKey ) => {
-                if( !envObject[tokenKey] ) {
-                    console.warn( `Missing ${tokenKey} in .env file` )
-                }
-            } )
-
-        return { serverConfig: baseConfig }
     }
 
 

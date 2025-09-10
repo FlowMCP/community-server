@@ -1,9 +1,11 @@
 import { serverConfig } from './serverConfig.mjs'
 import { ServerManager } from './src/index.mjs'
-import { checkBearerTokens, generateBearerTokenName } from './custom-schemas/helpers/utils.mjs'
 
-const activeRoutes = [ '/eerc20', '/inseight' ]
-const { landingPage, routes, x402 } = serverConfig
+const activeRoutesList = [ '/eerc20', '/inseight', '/etherscan-ping' ]
+const { landingPage, routes, x402, silent } = serverConfig
+
+const activeRoutes = routes
+    .filter( ( { routePath } ) => activeRoutesList.includes( routePath ) )
 
 const { stageType } = ServerManager
     .getStageType( { 'argvs': process.argv } )
@@ -15,17 +17,10 @@ const { webhookSecret, webhookPort, pm2Name } = ServerManager
     .getWebhookEnv( { stageType, serverConfig } )
 const { managerVersion } = ServerManager
     .getPackageVersion()
+const { mcpAuthMiddlewareConfig } = ServerManager
+    .getMcpAuthMiddlewareConfig( { activeRoutes, envObject, silent } )
 
-const filteredRoutes = routes.filter( ( { routePath } ) => activeRoutes.includes( routePath ) )
-const modifiedRoutes = filteredRoutes
-    .map( ( route ) => {
-        const { routePath, bearerIsPublic } = route
-        const { bearerTokenName } = generateBearerTokenName( { routePath } )
-        const bearerToken = bearerIsPublic ? null : envObject[ bearerTokenName ]
-        return { ...route, bearerToken }
-    } )
-
-const modifiedServerConfig = { landingPage, 'routes': modifiedRoutes, x402 }
+const modifiedServerConfig = { landingPage, 'routes': activeRoutes, x402 }
 const objectOfSchemaArrays = await modifiedServerConfig['routes']
     .reduce( async ( promiseAcc, route ) => {
         const acc = await promiseAcc
@@ -35,15 +30,13 @@ const objectOfSchemaArrays = await modifiedServerConfig['routes']
         return acc
     }, Promise.resolve( {} ) )
 
-const { status, messages } = checkBearerTokens( { routes: filteredRoutes, envObject } )
-if( !status ) { throw new Error( `Missing bearer tokens:\n${messages.join( '\n' )}` ) }
-
 await ServerManager
     .start( {
-        silent: false,
+        silent,
         stageType,
         objectOfSchemaArrays,
         serverConfig: modifiedServerConfig,
+        mcpAuthMiddlewareConfig,
         envObject,
         webhookSecret,
         webhookPort,

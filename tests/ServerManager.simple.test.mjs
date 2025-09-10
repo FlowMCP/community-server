@@ -22,7 +22,8 @@ describe( 'ServerManager - Simple Tests', () => {
         expect( ServerManager ).toBeDefined()
         expect( typeof ServerManager.start ).toBe( 'function' )
         expect( typeof ServerManager.getEnvObject ).toBe( 'function' )
-        expect( typeof ServerManager.getServerConfig ).toBe( 'function' )
+        expect( typeof ServerManager.getMcpAuthMiddlewareConfig ).toBe( 'function' )
+        expect( typeof ServerManager.getX402Credentials ).toBe( 'function' )
     } )
 
     

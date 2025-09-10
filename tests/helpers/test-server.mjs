@@ -10,7 +10,7 @@ class TestServerHelper {
         const testEnvObject = {
             'SERVER_URL': 'http://localhost',
             'SERVER_PORT': port.toString(),
-            'BEARER_TOKEN__0': 'test-clean-token'
+            'BEARER_TOKEN_EERC20': 'test-clean-token'
         }
 
         const testServerConfig = {
@@ -20,14 +20,16 @@ class TestServerHelper {
             },
             'routes': [
                 {
-                    'endpoint': '/clean',
-                    'bearerToken': '',  // No auth for testing
-                    'tags': [],
                     'routePath': '/clean',
+                    'name': 'Clean Test Route',
+                    'description': 'Test route for clean shutdown testing',
+                    'auth': {
+                        'enabled': false  // No auth for testing
+                    },
                     'protocol': 'sse',
-                    'includeNamespaces': [ 'x402' ],
-                    'excludeNamespaces': [],
-                    'activateTags': []
+                    'schemas': async () => {
+                        return { arrayOfSchemas: [ x402PingSchema ] }
+                    }
                 }
             ]
         }
@@ -36,11 +38,13 @@ class TestServerHelper {
             '/clean': [ x402PingSchema ]
         }
 
+        // Since no auth is enabled, mcpAuthMiddlewareConfig is not needed
         const result = await ServerManager.start( {
             silent: true,
             stageType: 'test',
             objectOfSchemaArrays,
             serverConfig: testServerConfig,
+            mcpAuthMiddlewareConfig: null,
             envObject: testEnvObject,
             managerVersion: '0.0.1',
             webhookSecret: 'test-clean',

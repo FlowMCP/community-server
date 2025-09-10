@@ -196,19 +196,19 @@ describe( 'ServerManager Edge Cases and Error Handling', () => {
 
 
     describe( 'Configuration validation edge cases', () => {
-        test( 'should handle getServerConfig with minimal envObject', () => {
-            const envObject = {} // No bearer tokens provided
-            const consoleSpy = jest.spyOn( console, 'warn' ).mockImplementation( () => {} )
+        test( 'should handle getMcpAuthMiddlewareConfig with empty routes', () => {
+            const activeRoutes = []
+            const envObject = {}
             
-            const { serverConfig } = ServerManager.getServerConfig( { envObject } )
+            const { mcpAuthMiddlewareConfig } = ServerManager.getMcpAuthMiddlewareConfig( { 
+                activeRoutes, 
+                envObject, 
+                silent: true 
+            } )
             
-            expect( serverConfig.routes ).toHaveLength( 4 )
-            expect( serverConfig.routes[0].bearerToken ).toBe( 'default-token-0' )
-            expect( consoleSpy ).toHaveBeenCalledWith( 'Missing BEARER_TOKEN__1 in .env file' )
-            expect( consoleSpy ).toHaveBeenCalledWith( 'Missing BEARER_TOKEN__2 in .env file' )
-            expect( consoleSpy ).toHaveBeenCalledWith( 'Missing BEARER_TOKEN__3 in .env file' )
-            
-            consoleSpy.mockRestore()
+            expect( mcpAuthMiddlewareConfig ).toBeDefined()
+            expect( mcpAuthMiddlewareConfig.routes ).toEqual( {} )
+            expect( mcpAuthMiddlewareConfig.silent ).toBe( true )
         } )
 
         test( 'should handle complex serverConfig validation', () => {
