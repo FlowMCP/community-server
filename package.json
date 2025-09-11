@@ -19,7 +19,7 @@
   "dependencies": {
     "ethers": "^6.14.4",
     "flowmcpServers": "github:flowmcp/flowMCP-servers#e5b13742c264ccb170077d2c9b0616da974a63b6",
-    "mcpAuthMiddleware": "github:flowmcp/mcp-auth-middleware#75bb1fbea5a8b91c6c8a7930425d736e720f036c",
+    "mcpAuthMiddleware": "github:flowmcp/mcp-auth-middleware#6c73b5fc0000d8c6017119b120ed38767a37fcbf",
     "moment": "^2.30.1",
     "pinata": "^2.4.8",
     "raw-body": "^3.0.0",

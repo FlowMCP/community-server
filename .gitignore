@@ -20,3 +20,4 @@ config/production.env
 
 # MacOS files
 .DS_Store
+codecov*
