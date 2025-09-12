@@ -1,4 +1,4 @@
-import { WebhookServer } from '../src/task/WebhookServer.mjs'
+import { WebhookServer } from '../../../src/task/WebhookServer.mjs'
 import { jest } from '@jest/globals'
 import crypto from 'crypto'
 

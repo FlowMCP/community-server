@@ -72,7 +72,7 @@ class ServerManager {
 
         struct['mcpAuthMiddlewareConfig']['routes'] = activeRoutes
             .reduce( ( acc, route ) => {
-                const { routePath, auth } = route
+                const { routePath, auth, protocol = 'sse' } = route
                 if( !auth.enabled ) { return acc }
                 
                 let authConfig = { ...auth }
@@ -109,7 +109,7 @@ class ServerManager {
                         throw new Error( `Unsupported authType ${authConfig.authType} on route ${routePath}` )
                 }
                 
-                acc[ routePath ] = authConfig
+                acc[ routePath + '/' + protocol ] = authConfig
                 return acc
             }, {} )
 

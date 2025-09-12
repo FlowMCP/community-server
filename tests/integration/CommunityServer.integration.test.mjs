@@ -35,24 +35,60 @@ const mockFs = {
     readFileSync: jest.fn( () => '<html>{{HEADLINE}}</html>' )
 }
 
+const mockCors = jest.fn( () => jest.fn() )
+
 jest.unstable_mockModule( 'flowmcpServers', () => ({ 
     Deploy: jest.fn(),
     DeployAdvanced: mockDeployAdvanced 
 }) )
 jest.unstable_mockModule( 'x402-mcp-middleware', () => ({ X402Middleware: mockX402Middleware }) )
-jest.unstable_mockModule( 'net', () => ({ default: mockNet }) )
+jest.unstable_mockModule( 'net', () => ({ 
+    default: mockNet,
+    isIP: jest.fn( () => 4 ),
+    isIPv4: jest.fn( () => true ),
+    isIPv6: jest.fn( () => false ),
+    createServer: mockNet.createServer
+}) )
 jest.unstable_mockModule( 'fs', () => ({ default: mockFs }) )
+jest.unstable_mockModule( 'node:fs', () => ({ 
+    default: mockFs,
+    readFileSync: mockFs.readFileSync,
+    createReadStream: jest.fn(),
+    writeFileSync: jest.fn(),
+    existsSync: jest.fn(),
+    statSync: jest.fn(),
+    promises: {
+        readFile: jest.fn(),
+        writeFile: jest.fn(),
+        access: jest.fn()
+    }
+}) )
 jest.unstable_mockModule( 'path', () => ({ 
     default: { 
         dirname: jest.fn( () => '/test/dir' ),
         join: jest.fn( ( ...args ) => args.join( '/' ) )
     } 
 }) )
-jest.unstable_mockModule( 'url', () => ({ 
-    fileURLToPath: jest.fn( () => '/test/file.mjs' ) 
+jest.unstable_mockModule( 'node:path', () => ({ 
+    default: { 
+        dirname: jest.fn( () => '/test/dir' ),
+        join: jest.fn( ( ...args ) => args.join( '/' ) )
+    },
+    dirname: jest.fn( () => '/test/dir' ),
+    join: jest.fn( ( ...args ) => args.join( '/' ) ),
+    basename: jest.fn( () => 'file.mjs' )
 }) )
+jest.unstable_mockModule( 'url', () => ({ 
+    fileURLToPath: jest.fn( () => '/test/file.mjs' ),
+    format: jest.fn( () => 'http://localhost:8080' )
+}) )
+jest.unstable_mockModule( 'node:url', () => ({ 
+    fileURLToPath: jest.fn( () => '/test/file.mjs' ),
+    format: jest.fn( () => 'http://localhost:8080' )
+}) )
+jest.unstable_mockModule( 'cors', () => ({ default: mockCors }) )
 
-const { CommunityServer } = await import( '../src/task/CommunityServer.mjs' )
+const { CommunityServer } = await import( '../../src/task/CommunityServer.mjs' )
 
 describe( 'CommunityServer Integration Tests', () => {
 

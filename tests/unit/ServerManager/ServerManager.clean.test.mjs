@@ -1,4 +1,4 @@
-import { ServerManager } from '../src/index.mjs'
+import { ServerManager } from '../../../src/index.mjs'
 import { jest } from '@jest/globals'
 
 describe( 'ServerManager Clean Tests', () => {
@@ -89,8 +89,8 @@ describe( 'ServerManager Clean Tests', () => {
             })
 
             expect(mcpAuthMiddlewareConfig).toBeDefined()
-            expect(mcpAuthMiddlewareConfig.routes['/eerc20']).toBeDefined()
-            expect(mcpAuthMiddlewareConfig.routes['/eerc20'].token).toBe('clean-test-token')
+            expect(mcpAuthMiddlewareConfig.routes['/eerc20/sse']).toBeDefined()
+            expect(mcpAuthMiddlewareConfig.routes['/eerc20/sse'].token).toBe('clean-test-token')
         })
 
         test('should handle disabled auth routes gracefully', () => {

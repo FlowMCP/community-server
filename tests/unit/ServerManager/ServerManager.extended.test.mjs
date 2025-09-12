@@ -1,5 +1,5 @@
-import { ServerManager } from '../src/index.mjs'
-import { serverConfig } from '../serverConfig.mjs'
+import { ServerManager } from '../../../src/index.mjs'
+import { serverConfig } from '../../../serverConfig.mjs'
 import { jest } from '@jest/globals'
 
 describe('ServerManager - Extended Coverage Tests', () => {

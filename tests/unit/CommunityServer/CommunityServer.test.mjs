@@ -1,4 +1,4 @@
-import { CommunityServer } from '../src/task/CommunityServer.mjs'
+import { CommunityServer } from '../../../src/task/CommunityServer.mjs'
 import { jest } from '@jest/globals'
 
 // Spy on console methods

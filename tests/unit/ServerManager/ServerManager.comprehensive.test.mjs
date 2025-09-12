@@ -1,5 +1,5 @@
-import { ServerManager } from '../src/index.mjs'
-import { serverConfig } from '../serverConfig.mjs'
+import { ServerManager } from '../../../src/index.mjs'
+import { serverConfig } from '../../../serverConfig.mjs'
 import fs from 'fs'
 
 
@@ -116,10 +116,10 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
             
             expect( mcpAuthMiddlewareConfig ).toBeDefined()
             expect( mcpAuthMiddlewareConfig.routes ).toBeDefined()
-            expect( mcpAuthMiddlewareConfig.routes[ '/eerc20' ] ).toBeDefined()
-            expect( mcpAuthMiddlewareConfig.routes[ '/eerc20' ].authType ).toBe( 'staticBearer' )
-            expect( mcpAuthMiddlewareConfig.routes[ '/eerc20' ].token ).toBe( 'test-eerc20-token' )
-            expect( mcpAuthMiddlewareConfig.routes[ '/lukso' ] ).toBeUndefined()
+            expect( mcpAuthMiddlewareConfig.routes[ '/eerc20/sse' ] ).toBeDefined()
+            expect( mcpAuthMiddlewareConfig.routes[ '/eerc20/sse' ].authType ).toBe( 'staticBearer' )
+            expect( mcpAuthMiddlewareConfig.routes[ '/eerc20/sse' ].token ).toBe( 'test-eerc20-token' )
+            expect( mcpAuthMiddlewareConfig.routes[ '/lukso/sse' ] ).toBeUndefined()
         } )
 
         test( 'should handle OAuth2 Auth0 configuration with template variables', () => {
@@ -148,11 +148,11 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
                 silent: true 
             } )
             
-            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping' ] ).toBeDefined()
-            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping' ].authType ).toBe( 'oauth21_auth0' )
-            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping' ].providerUrl ).toBe( 'https://dev-example.us.auth0.com' )
-            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping' ].clientId ).toBe( 'test-client-id' )
-            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping' ].clientSecret ).toBe( 'test-client-secret' )
+            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping/sse' ] ).toBeDefined()
+            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping/sse' ].authType ).toBe( 'oauth21_auth0' )
+            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping/sse' ].providerUrl ).toBe( 'https://dev-example.us.auth0.com' )
+            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping/sse' ].clientId ).toBe( 'test-client-id' )
+            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping/sse' ].clientSecret ).toBe( 'test-client-secret' )
         } )
 
         test( 'should throw error for missing environment variables', () => {

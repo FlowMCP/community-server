@@ -35,7 +35,7 @@ mockExpress.raw = jest.fn( () => jest.fn() )
 
 jest.unstable_mockModule( 'express', () => ({ default: mockExpress }) )
 
-const { WebhookServer } = await import( '../src/task/WebhookServer.mjs' )
+const { WebhookServer } = await import( '../../../src/task/WebhookServer.mjs' )
 
 describe( 'WebhookServer Complete Coverage Tests', () => {
 

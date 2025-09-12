@@ -1,4 +1,4 @@
-import { ServerManager } from '../src/index.mjs'
+import { ServerManager } from '../../../src/index.mjs'
 import { jest } from '@jest/globals'
 
 describe('ServerManager - Additional Edge Case Tests', () => {
@@ -38,13 +38,13 @@ describe('ServerManager - Additional Edge Case Tests', () => {
             })
 
             // Verify both auth types are handled correctly
-            expect(mcpAuthMiddlewareConfig.routes['/eerc20']).toBeDefined()
-            expect(mcpAuthMiddlewareConfig.routes['/eerc20'].authType).toBe('staticBearer')
-            expect(mcpAuthMiddlewareConfig.routes['/eerc20'].token).toBe('test-bearer-token')
+            expect(mcpAuthMiddlewareConfig.routes['/eerc20/sse']).toBeDefined()
+            expect(mcpAuthMiddlewareConfig.routes['/eerc20/sse'].authType).toBe('staticBearer')
+            expect(mcpAuthMiddlewareConfig.routes['/eerc20/sse'].token).toBe('test-bearer-token')
             
-            expect(mcpAuthMiddlewareConfig.routes['/etherscan-ping']).toBeDefined()
-            expect(mcpAuthMiddlewareConfig.routes['/etherscan-ping'].authType).toBe('oauth21_auth0')
-            expect(mcpAuthMiddlewareConfig.routes['/etherscan-ping'].providerUrl).toBe('https://dev-test.auth0.com')
+            expect(mcpAuthMiddlewareConfig.routes['/etherscan-ping/sse']).toBeDefined()
+            expect(mcpAuthMiddlewareConfig.routes['/etherscan-ping/sse'].authType).toBe('oauth21_auth0')
+            expect(mcpAuthMiddlewareConfig.routes['/etherscan-ping/sse'].providerUrl).toBe('https://dev-test.auth0.com')
         })
 
         test('should handle routes with auth disabled', () => {
@@ -66,7 +66,7 @@ describe('ServerManager - Additional Edge Case Tests', () => {
             })
 
             // Should not include routes with disabled auth
-            expect(mcpAuthMiddlewareConfig.routes['/public-route']).toBeUndefined()
+            expect(mcpAuthMiddlewareConfig.routes['/public-route/sse']).toBeUndefined()
             expect(Object.keys(mcpAuthMiddlewareConfig.routes)).toHaveLength(0)
         })
 

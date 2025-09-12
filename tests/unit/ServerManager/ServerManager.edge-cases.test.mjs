@@ -2,12 +2,35 @@ import { jest } from '@jest/globals'
 
 // Mock fs for error testing
 const mockFs = {
-    readFileSync: jest.fn()
+    readFileSync: jest.fn(),
+    createReadStream: jest.fn(),
+    writeFileSync: jest.fn(),
+    existsSync: jest.fn()
 }
 
-jest.unstable_mockModule( 'fs', () => ({ default: mockFs }) )
+jest.unstable_mockModule( 'fs', () => ({ 
+    default: mockFs,
+    readFileSync: mockFs.readFileSync,
+    createReadStream: mockFs.createReadStream,
+    writeFileSync: mockFs.writeFileSync,
+    existsSync: mockFs.existsSync
+}) )
 
-const { ServerManager } = await import( '../src/index.mjs' )
+jest.unstable_mockModule( 'node:fs', () => ({ 
+    default: mockFs,
+    readFileSync: mockFs.readFileSync,
+    createReadStream: mockFs.createReadStream,
+    writeFileSync: mockFs.writeFileSync,
+    existsSync: mockFs.existsSync,
+    statSync: jest.fn(),
+    promises: {
+        readFile: jest.fn(),
+        writeFile: jest.fn(),
+        access: jest.fn()
+    }
+}) )
+
+const { ServerManager } = await import( '../../../src/index.mjs' )
 
 describe( 'ServerManager Edge Cases and Error Handling', () => {
 

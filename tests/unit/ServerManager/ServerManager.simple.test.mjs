@@ -1,4 +1,4 @@
-import { ServerManager } from '../src/index.mjs'
+import { ServerManager } from '../../../src/index.mjs'
 
 
 describe( 'ServerManager - Simple Tests', () => {

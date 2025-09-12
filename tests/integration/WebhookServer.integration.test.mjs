@@ -20,7 +20,7 @@ jest.unstable_mockModule( 'child_process', () => ({
     exec: jest.fn( ( cmd, callback ) => callback( new Error( 'Test deployment failure' ), '', 'error' ) )
 }) )
 
-const { WebhookServer } = await import( '../src/task/WebhookServer.mjs' )
+const { WebhookServer } = await import( '../../src/task/WebhookServer.mjs' )
 
 describe( 'WebhookServer Integration Tests', () => {
 
