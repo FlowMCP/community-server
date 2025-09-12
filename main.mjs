@@ -18,7 +18,7 @@ const { webhookSecret, webhookPort, pm2Name } = ServerManager
 const { managerVersion } = ServerManager
     .getPackageVersion()
 const { mcpAuthMiddlewareConfig } = ServerManager
-    .getMcpAuthMiddlewareConfig( { activeRoutes, envObject, silent } )
+    .getMcpAuthMiddlewareConfig( { activeRoutes, envObject, silent, stageType } )
 
 const modifiedServerConfig = { landingPage, 'routes': activeRoutes, x402, cors }
 const objectOfSchemaArrays = await modifiedServerConfig['routes']
