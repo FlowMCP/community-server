@@ -6,7 +6,7 @@ const serverConfig = {
     'silent': false,
     'baseUrls': {
         'development': 'http://localhost:3000',
-        'production': 'http://community.flowmcp.org',
+        'production': 'https://community.flowmcp.org',
     },
     'cors': {
         'enabled': true,

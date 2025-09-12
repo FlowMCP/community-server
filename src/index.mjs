@@ -67,7 +67,7 @@ class ServerManager {
             'mcpAuthMiddlewareConfig': {
                 silent,
                 baseUrl: baseUrls[stageType],
-                forceHttps: stageType === 'production',
+                forceHttps: stageType === 'production' || baseUrls[stageType].startsWith('https://'),
                 'routes': {}
             }
         }
