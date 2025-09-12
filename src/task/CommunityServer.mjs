@@ -26,7 +26,12 @@ class CommunityServer {
         // Create and apply auth middleware if config is provided
         if( mcpAuthMiddlewareConfig ) {
             const authMiddleware = await McpAuthMiddleware
-                .create( mcpAuthMiddlewareConfig )
+                .create( {
+                    routes: mcpAuthMiddlewareConfig.routes,
+                    silent: mcpAuthMiddlewareConfig.silent,
+                    baseUrl: mcpAuthMiddlewareConfig.baseUrl,
+                    forceHttps: mcpAuthMiddlewareConfig.forceHttps
+                } )
             app.use( authMiddleware.router() )
         }
         

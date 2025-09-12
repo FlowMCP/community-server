@@ -1,4 +1,5 @@
 import { ServerManager } from '../../../src/index.mjs'
+import { testBaseUrls } from '../../helpers/config.mjs'
 import { jest } from '@jest/globals'
 
 describe('ServerManager - Additional Edge Case Tests', () => {
@@ -34,7 +35,9 @@ describe('ServerManager - Additional Edge Case Tests', () => {
             const { mcpAuthMiddlewareConfig } = ServerManager.getMcpAuthMiddlewareConfig({ 
                 activeRoutes, 
                 envObject, 
-                silent: true 
+                silent: true,
+                stageType: 'development',
+                baseUrls: testBaseUrls
             })
 
             // Verify both auth types are handled correctly
@@ -62,7 +65,9 @@ describe('ServerManager - Additional Edge Case Tests', () => {
             const { mcpAuthMiddlewareConfig } = ServerManager.getMcpAuthMiddlewareConfig({ 
                 activeRoutes, 
                 envObject, 
-                silent: true 
+                silent: true,
+                stageType: 'development',
+                baseUrls: testBaseUrls
             })
 
             // Should not include routes with disabled auth
@@ -77,7 +82,9 @@ describe('ServerManager - Additional Edge Case Tests', () => {
             const { mcpAuthMiddlewareConfig } = ServerManager.getMcpAuthMiddlewareConfig({ 
                 activeRoutes, 
                 envObject, 
-                silent: false 
+                silent: false,
+                stageType: 'development',
+                baseUrls: testBaseUrls
             })
 
             expect(mcpAuthMiddlewareConfig.silent).toBe(false)

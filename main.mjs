@@ -2,7 +2,7 @@ import { serverConfig } from './serverConfig.mjs'
 import { ServerManager } from './src/index.mjs'
 
 const activeRoutesList = [ '/eerc20', '/inseight', '/etherscan-ping' ]
-const { landingPage, routes, x402, cors, silent } = serverConfig
+const { landingPage, routes, x402, cors, silent, baseUrls } = serverConfig
 
 const activeRoutes = routes
     .filter( ( { routePath } ) => activeRoutesList.includes( routePath ) )
@@ -18,7 +18,7 @@ const { webhookSecret, webhookPort, pm2Name } = ServerManager
 const { managerVersion } = ServerManager
     .getPackageVersion()
 const { mcpAuthMiddlewareConfig } = ServerManager
-    .getMcpAuthMiddlewareConfig( { activeRoutes, envObject, silent, stageType } )
+    .getMcpAuthMiddlewareConfig( { activeRoutes, envObject, silent, stageType, baseUrls } )
 
 const modifiedServerConfig = { landingPage, 'routes': activeRoutes, x402, cors }
 const objectOfSchemaArrays = await modifiedServerConfig['routes']

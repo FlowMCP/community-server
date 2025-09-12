@@ -31,6 +31,7 @@ jest.unstable_mockModule( 'node:fs', () => ({
 }) )
 
 const { ServerManager } = await import( '../../../src/index.mjs' )
+const { testBaseUrls } = await import( '../../helpers/config.mjs' )
 
 describe( 'ServerManager Edge Cases and Error Handling', () => {
 
@@ -226,7 +227,9 @@ describe( 'ServerManager Edge Cases and Error Handling', () => {
             const { mcpAuthMiddlewareConfig } = ServerManager.getMcpAuthMiddlewareConfig( { 
                 activeRoutes, 
                 envObject, 
-                silent: true 
+                silent: true,
+                stageType: 'development',
+                baseUrls: testBaseUrls
             } )
             
             expect( mcpAuthMiddlewareConfig ).toBeDefined()

@@ -1,5 +1,6 @@
 import { ServerManager } from '../../../src/index.mjs'
 import { serverConfig } from '../../../serverConfig.mjs'
+import { getMcpAuthTestParams, testBaseUrls } from '../../helpers/config.mjs'
 import fs from 'fs'
 
 
@@ -111,7 +112,9 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
             const { mcpAuthMiddlewareConfig } = ServerManager.getMcpAuthMiddlewareConfig( { 
                 activeRoutes, 
                 envObject, 
-                silent: true 
+                silent: true,
+                stageType: 'development',
+                baseUrls: testBaseUrls
             } )
             
             expect( mcpAuthMiddlewareConfig ).toBeDefined()
@@ -145,7 +148,9 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
             const { mcpAuthMiddlewareConfig } = ServerManager.getMcpAuthMiddlewareConfig( { 
                 activeRoutes, 
                 envObject, 
-                silent: true 
+                silent: true,
+                stageType: 'development',
+                baseUrls: testBaseUrls
             } )
             
             expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping/sse' ] ).toBeDefined()
@@ -173,7 +178,9 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
                 ServerManager.getMcpAuthMiddlewareConfig( { 
                     activeRoutes, 
                     envObject, 
-                    silent: true 
+                    silent: true,
+                    stageType: 'development',
+                    baseUrls: testBaseUrls
                 } )
             } ).toThrow( 'MCP Auth configuration errors: Missing environment variable: MISSING_TOKEN' )
         } )

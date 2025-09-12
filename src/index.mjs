@@ -50,7 +50,7 @@ class ServerManager {
     }
 
 
-    static getMcpAuthMiddlewareConfig( { activeRoutes, envObject, silent, stageType } ) {
+    static getMcpAuthMiddlewareConfig( { activeRoutes, envObject, silent, stageType, baseUrls } ) {
         function getEnvSecret( { key, envObject } ) {
             let status = false
             let messages = []
@@ -66,6 +66,8 @@ class ServerManager {
             'messages': [],
             'mcpAuthMiddlewareConfig': {
                 silent,
+                baseUrl: baseUrls[stageType],
+                forceHttps: stageType === 'production',
                 'routes': {}
             }
         }
@@ -103,9 +105,6 @@ class ServerManager {
                                 }
                                 return acc
                             }, {} )
-                        
-                        // Set forceHttps based on stageType
-                        authConfig.forceHttps = stageType === 'production'
 
                         break
                     default:

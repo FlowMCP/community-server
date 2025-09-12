@@ -20,7 +20,7 @@
     "cors": "^2.8.5",
     "ethers": "^6.14.4",
     "flowmcpServers": "github:flowmcp/flowMCP-servers#e5b13742c264ccb170077d2c9b0616da974a63b6",
-    "mcpAuthMiddleware": "github:flowmcp/mcp-auth-middleware#6c73b5fc0000d8c6017119b120ed38767a37fcbf",
+    "mcpAuthMiddleware": "github:flowmcp/mcp-auth-middleware#6595614619329ba3f6796b7802b32ce43da1e571",
     "moment": "^2.30.1",
     "pinata": "^2.4.8",
     "raw-body": "^3.0.0",
