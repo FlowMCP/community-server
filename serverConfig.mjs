@@ -135,7 +135,7 @@ const serverConfig = {
                 'scope': 'openid profile email',
                 'audience': 'http://localhost:3000/first-route',
                 'resourceUri': null,
-                'forceHttps': false
+                // 'forceHttps': false <--- uses stageType to set this
             },
             'protocol': 'sse',
             'schemas': async () => {
