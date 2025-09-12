@@ -73,7 +73,7 @@ class WebhookServer {
                 console.log('🚀 Detected release or tag push — triggering deployment...');
 
                 exec(
-                    `git pull origin main && npm install && pm2 restart ${pm2Name}`,
+                    `cd ~/community-server &&rm -rf package-lock.json && git pull origin main && npm install && pm2 restart ${pm2Name}`,
                     (err, stdout, stderr) => {
                         if (err) {
                             console.error('❌ Deploy failed:', stderr);
