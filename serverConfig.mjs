@@ -4,6 +4,10 @@ import { FlowMCP } from 'flowmcp'
 
 const serverConfig = {
     'silent': false,
+    'cors': {
+        'enabled': true,
+        'options': null
+    },
     'env': {
         'development': '../.community.env',
         'production': '../.community.env', 

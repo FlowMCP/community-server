@@ -2,7 +2,7 @@ import { serverConfig } from './serverConfig.mjs'
 import { ServerManager } from './src/index.mjs'
 
 const activeRoutesList = [ '/eerc20', '/inseight', '/etherscan-ping' ]
-const { landingPage, routes, x402, silent } = serverConfig
+const { landingPage, routes, x402, cors, silent } = serverConfig
 
 const activeRoutes = routes
     .filter( ( { routePath } ) => activeRoutesList.includes( routePath ) )
@@ -20,7 +20,7 @@ const { managerVersion } = ServerManager
 const { mcpAuthMiddlewareConfig } = ServerManager
     .getMcpAuthMiddlewareConfig( { activeRoutes, envObject, silent } )
 
-const modifiedServerConfig = { landingPage, 'routes': activeRoutes, x402 }
+const modifiedServerConfig = { landingPage, 'routes': activeRoutes, x402, cors }
 const objectOfSchemaArrays = await modifiedServerConfig['routes']
     .reduce( async ( promiseAcc, route ) => {
         const acc = await promiseAcc

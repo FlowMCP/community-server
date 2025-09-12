@@ -1,6 +1,7 @@
 import { Deploy, DeployAdvanced } from 'flowmcpServers'
 import { X402Middleware } from 'x402-mcp-middleware'
 import { McpAuthMiddleware } from 'mcpAuthMiddleware'
+import cors from 'cors'
 
 import fs from 'fs'
 import path from 'path'
@@ -15,6 +16,12 @@ class CommunityServer {
     static async start( { silent, stageType, objectOfSchemaArrays, serverConfig, mcpAuthMiddlewareConfig, envObject, managerVersion, x402Config, x402Credentials, x402PrivateKey } ) {
         const { app, mcps, events, argv, server } = DeployAdvanced
             .init( { silent } )
+        
+        // CORS-Middleware hinzufügen wenn aktiviert
+        if( serverConfig.cors?.enabled ) {
+            if( !silent ) { console.log( '🌐 CORS middleware enabled with options:', serverConfig.cors.options ) }
+            app.use( cors( serverConfig.cors.options ) )
+        }
         
         // Create and apply auth middleware if config is provided
         if( mcpAuthMiddlewareConfig ) {
