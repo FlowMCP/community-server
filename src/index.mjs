@@ -87,6 +87,7 @@ class ServerManager {
                         authConfig['token'] = value
                         break;
                     case 'oauth21_auth0':
+                    case 'oauth21_scalekit':
                         authConfig = Object
                             .entries( authConfig )
                             .reduce( ( acc, [ key, value ] ) => {

@@ -22,3 +22,4 @@ config/production.env
 .DS_Store
 codecov*
 coverage
+.playwright-mcp

@@ -1,6 +1,6 @@
 {
   "name": "community-server",
-  "version": "2.0.4",
+  "version": "2.1.0",
   "description": "",
   "main": "main.js",
   "scripts": {
@@ -20,7 +20,7 @@
     "cors": "^2.8.5",
     "ethers": "^6.14.4",
     "flowmcpServers": "github:flowmcp/flowMCP-servers#e5b13742c264ccb170077d2c9b0616da974a63b6",
-    "mcpAuthMiddleware": "github:flowmcp/mcp-auth-middleware#27521290131e3e18025122f213dd173c63a319d6",
+    "mcpAuthMiddleware": "github:flowmcp/mcp-auth-middleware#64ac521b1be0acc8565e47d817ecc45b86101ecf",
     "moment": "^2.30.1",
     "pinata": "^2.4.8",
     "raw-body": "^3.0.0",
@@ -28,7 +28,7 @@
     "x402-mcp-middleware": "github:flowmcp/x402-mcp-middleware#7f2616236df83d19bacb8014e1ea00b15dfe8cd7"
   },
   "devDependencies": {
-    "@modelcontextprotocol/inspector": "^0.16.3",
+    "@modelcontextprotocol/inspector": "^0.16.7",
     "jest": "^30.0.5"
   }
 }

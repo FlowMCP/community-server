@@ -1,7 +1,7 @@
 import { serverConfig } from './serverConfig.mjs'
 import { ServerManager } from './src/index.mjs'
 
-const activeRoutesList = [ '/eerc20', '/inseight', '/etherscan-ping' ]
+const activeRoutesList = [ '/eerc20', '/inseight', '/scalekit-route' ]
 const { landingPage, routes, x402, cors, silent, baseUrls } = serverConfig
 
 const activeRoutes = routes

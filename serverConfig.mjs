@@ -1,11 +1,12 @@
 import { getArrayOfSchemas } from './custom-schemas/helpers/utils.mjs'
 import { FlowMCP } from 'flowmcp'
+import { SchemaImporter } from 'schemaImporter'
 
 
 const serverConfig = {
     'silent': false,
     'baseUrls': {
-        'development': 'http://localhost:3000',
+        'development': 'http://localhost:8080',
         'production': 'https://community.flowmcp.org',
     },
     'cors': {
@@ -122,6 +123,40 @@ const serverConfig = {
             }
         },
         {
+            'routePath': '/scalekit-route',
+            'name': 'ScaleKit Route',
+            'description': 'Testing ScaleKit OAuth 2.1 configuration with MCP schemas',
+            'bearerIsPublic': false,
+            'protocol': 'sse',
+            'auth': {
+                'enabled': true,
+                'authType': 'oauth21_scalekit',
+                'providerUrl': '{{SCALEKIT_ENVIRONMENT_URL}}',
+                'mcpId': '{{SCALEKIT_MCP_ID}}',
+                'clientId': '{{SCALEKIT_CLIENT_ID}}',
+                'clientSecret': '{{SCALEKIT_CLIENT_SECRET}}',
+                'resource': 'http://localhost:8080/scalekit-route',
+                'resourceDocumentation': 'http://localhost:8080/scalekit-route/docs',
+                'scope': 'openid profile mcp:tools mcp:resources:read mcp:resources:write',
+                'authFlow': 'authorization_code',
+                'forceHttps': false
+            },
+            'schemas': async () => {
+                const arrayOfSchemas = await getArrayOfSchemas( {
+                    includeNamespaces: [ 'etherscan' ],
+                    excludeNamespaces: [],
+                    activateTags: []
+                } )
+
+                // Add ping schema
+                const { schema: pingSchema } = await import( 'schemaImporter/schemas/v1.2.0/x402/ping.mjs' )
+                arrayOfSchemas.push( pingSchema )
+
+                return { arrayOfSchemas }
+            }
+        },
+        /* Commented out - replaced by /scalekit-route
+        {
             'routePath': '/etherscan-ping',
             'name': 'Etherscan with Ping - Smart Contract Explorer with Ping',
             'description': 'Provides access to Etherscan smart contract explorer with OAuth 2.1 authentication and ping functionality.',
@@ -147,14 +182,15 @@ const serverConfig = {
                     excludeNamespaces: [],
                     activateTags: []
                 } )
-                
+
                 // Add ping schema
                 const { schema: pingSchema } = await import( 'schemaImporter/schemas/v1.2.0/x402/ping.mjs' )
                 arrayOfSchemas.push( pingSchema )
-                
+
                 return { arrayOfSchemas }
             }
         }
+        */
     ],
     'x402': {
         'chainId': 84532,
