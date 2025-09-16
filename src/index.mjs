@@ -19,7 +19,7 @@ class ServerManager {
     }
 
 
-    static getWebhookEnv( { stageType, serverConfig } ) {
+    static getWebhookEnv( { stageType, envPath } ) {
         const { selection } = {
             'selection': [
                 [ 'WEBHOOK_SECRET', 'webhookSecret' ],
@@ -29,7 +29,7 @@ class ServerManager {
         }
 
         const result = this
-            .#loadEnv( { stageType, serverConfig } )
+            .#loadEnv( { envPath } )
             .split( "\n" )
             .filter( line => line && !line.startsWith( '#' ) && line.includes( '=' ) )
             .map( line => line.split( '=' ) )
@@ -50,7 +50,7 @@ class ServerManager {
     }
 
 
-    static getMcpAuthMiddlewareConfig( { activeRoutes, envObject, silent, stageType, baseUrls } ) {
+    static getMcpAuthMiddlewareConfig( { activeRoutes, envObject, silent, stageType, baseUrl } ) {
         function getEnvSecret( { key, envObject } ) {
             let status = false
             let messages = []
@@ -66,8 +66,8 @@ class ServerManager {
             'messages': [],
             'mcpAuthMiddlewareConfig': {
                 silent,
-                baseUrl: baseUrls[stageType],
-                forceHttps: stageType === 'production' || baseUrls[stageType].startsWith('https://'),
+                baseUrl: baseUrl,
+                forceHttps: stageType === 'production' || baseUrl.startsWith('https://'),
                 'routes': {}
             }
         }
@@ -191,9 +191,9 @@ class ServerManager {
     }
 
 
-    static getEnvObject( { stageType, serverConfig }) {
+    static getEnvObject( { stageType, envPath }) {
         const envObject = this
-            .#loadEnv( { stageType, serverConfig } )
+            .#loadEnv( { envPath } )
             .split( "\n" )
             .filter( line => line && !line.startsWith( '#' ) && line.includes( '=' ) )
             .map( line => line.split( '=' ) )
@@ -231,19 +231,19 @@ class ServerManager {
     }
 
 
-    static #loadEnv( { stageType, serverConfig } ) {
-        const path = serverConfig?.env?.[ stageType ]
-        if( !path ) {
-            console.error( `No environment file found for stage type: ${stageType}` )
-            throw new Error( `No environment file found for stage type: ${stageType}` )
+    static #loadEnv( { envPath } ) {
+        if( !envPath ) {
+            console.error( `No environment file path provided` )
+            throw new Error( `No environment file path provided` )
         }
 
         try {
             const envFile = fs
-                .readFileSync( path, 'utf-8' )
+                .readFileSync( envPath, 'utf-8' )
             return envFile
         } catch (error) {
-            return ''
+            console.error( `Error reading environment file: ${envPath}`, error )
+            throw new Error( `Error reading environment file: ${envPath}` )
         }
     }
 }

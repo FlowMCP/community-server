@@ -1,5 +1,5 @@
 import { ServerManager } from '../../../src/index.mjs'
-import { serverConfig } from '../../../serverConfig.mjs'
+// import { serverConfig } from '../../../serverConfig.mjs' // No longer needed with new architecture
 import { jest } from '@jest/globals'
 
 describe('ServerManager - Extended Coverage Tests', () => {
@@ -103,8 +103,8 @@ describe('ServerManager - Extended Coverage Tests', () => {
     describe('#loadEnv error handling', () => {
         test('should handle missing environment file path', () => {
             expect(() => {
-                ServerManager.getWebhookEnv({ stageType: 'nonexistent-stage', serverConfig })
-            }).toThrow('No environment file found for stage type: nonexistent-stage')
+                ServerManager.getWebhookEnv({ stageType: 'nonexistent-stage', envPath: 'nonexistent.env' })
+            }).toThrow('Error reading environment file: nonexistent.env')
         })
     })
 

@@ -1,6 +1,6 @@
 import { ServerManager } from '../../../src/index.mjs'
-import { serverConfig } from '../../../serverConfig.mjs'
-import { getMcpAuthTestParams, testBaseUrls } from '../../helpers/config.mjs'
+// import { serverConfig } from '../../../serverConfig.mjs' // No longer needed with new architecture
+import { getMcpAuthTestParams, testBaseUrl, testEnvPath } from '../../helpers/config.mjs'
 import fs from 'fs'
 
 
@@ -8,7 +8,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
 
     describe( 'getWebhookEnv() method', () => {
         test( 'should extract webhook environment variables from test stage', () => {
-            const { webhookSecret, webhookPort, pm2Name } = ServerManager.getWebhookEnv( { stageType: 'test', serverConfig } )
+            const { webhookSecret, webhookPort, pm2Name } = ServerManager.getWebhookEnv( { stageType: 'test', envPath: testEnvPath } )
             
             expect( webhookSecret ).toBe( 'your-webhook-secret-here' )
             expect( webhookPort ).toBe( '3001' )
@@ -16,7 +16,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
         } )
 
         test( 'should handle test stage', () => {
-            const result = ServerManager.getWebhookEnv( { stageType: 'test', serverConfig } )
+            const result = ServerManager.getWebhookEnv( { stageType: 'test', envPath: testEnvPath } )
             
             expect( result ).toBeDefined()
             expect( typeof result ).toBe( 'object' )
@@ -28,10 +28,10 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
             console.error = ( msg ) => { errorMessage = msg }
             
             expect( () => {
-                ServerManager.getWebhookEnv( { stageType: 'nonexistent' } )
+                ServerManager.getWebhookEnv( { stageType: 'nonexistent', envPath: 'nonexistent.env' } )
             } ).toThrow()
             
-            expect( errorMessage ).toBe( 'No environment file found for stage type: nonexistent' )
+            expect( errorMessage ).toBe( 'Error reading environment file: nonexistent.env' )
             
             console.error = originalError
         } )
@@ -114,7 +114,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
                 envObject, 
                 silent: true,
                 stageType: 'development',
-                baseUrls: testBaseUrls
+                baseUrl: testBaseUrl
             } )
             
             expect( mcpAuthMiddlewareConfig ).toBeDefined()
@@ -150,7 +150,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
                 envObject, 
                 silent: true,
                 stageType: 'development',
-                baseUrls: testBaseUrls
+                baseUrl: testBaseUrl
             } )
             
             expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping/sse' ] ).toBeDefined()
@@ -180,7 +180,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
                     envObject, 
                     silent: true,
                     stageType: 'development',
-                    baseUrls: testBaseUrls
+                    baseUrl: testBaseUrl
                 } )
             } ).toThrow( 'MCP Auth configuration errors: Missing environment variable: MISSING_TOKEN' )
         } )
@@ -189,7 +189,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
 
     describe( 'getEnvObject() method with real file reading', () => {
         test( 'should read and parse test environment file', () => {
-            const { envObject } = ServerManager.getEnvObject( { stageType: 'test', serverConfig } )
+            const { envObject } = ServerManager.getEnvObject( { stageType: 'test', envPath: testEnvPath } )
             
             expect( envObject ).toBeDefined()
             expect( typeof envObject ).toBe( 'object' )
@@ -203,7 +203,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
         } )
 
         test( 'should filter out comments and empty lines', () => {
-            const { envObject } = ServerManager.getEnvObject( { stageType: 'test', serverConfig } )
+            const { envObject } = ServerManager.getEnvObject( { stageType: 'test', envPath: testEnvPath } )
             
             // Should not contain comment keys
             expect( envObject[ '# Test Environment Variables for ServerManager Tests' ] ).toBeUndefined()
@@ -211,7 +211,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
         } )
 
         test( 'should handle test stage environment', () => {
-            const { envObject } = ServerManager.getEnvObject( { stageType: 'test', serverConfig } )
+            const { envObject } = ServerManager.getEnvObject( { stageType: 'test', envPath: testEnvPath } )
             
             expect( envObject ).toBeDefined()
             expect( typeof envObject ).toBe( 'object' )
@@ -254,7 +254,7 @@ ANOTHER_VALID=another_value
             const originalReadFileSync = fs.readFileSync
             fs.readFileSync = () => envContent
             
-            const { envObject } = ServerManager.getEnvObject( { stageType: 'test', serverConfig } )
+            const { envObject } = ServerManager.getEnvObject( { stageType: 'test', envPath: testEnvPath } )
             
             expect( envObject[ 'VALID_KEY' ] ).toBe( 'valid_value' )
             expect( envObject[ 'ANOTHER_VALID' ] ).toBe( 'another_value' )

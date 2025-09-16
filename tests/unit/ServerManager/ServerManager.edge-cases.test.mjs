@@ -31,7 +31,7 @@ jest.unstable_mockModule( 'node:fs', () => ({
 }) )
 
 const { ServerManager } = await import( '../../../src/index.mjs' )
-const { testBaseUrls } = await import( '../../helpers/config.mjs' )
+const { testBaseUrl, testEnvPath } = await import( '../../helpers/config.mjs' )
 
 describe( 'ServerManager Edge Cases and Error Handling', () => {
 
@@ -167,9 +167,9 @@ describe( 'ServerManager Edge Cases and Error Handling', () => {
                 return ''
             } )
             
-            const { envObject } = ServerManager.getEnvObject( { 
-                stageType: 'test', 
-                serverConfig 
+            const { envObject } = ServerManager.getEnvObject( {
+                stageType: 'test',
+                envPath: testEnvPath
             } )
             
             expect( envObject ).toEqual( {} )
@@ -183,12 +183,16 @@ describe( 'ServerManager Edge Cases and Error Handling', () => {
                 }
             }
             
+            mockFs.readFileSync.mockImplementation( () => {
+                throw new Error( 'File not found' )
+            } )
+
             expect( () => {
-                ServerManager.getEnvObject( { 
-                    stageType: 'development', 
-                    serverConfig 
+                ServerManager.getEnvObject( {
+                    stageType: 'development',
+                    envPath: 'nonexistent.env'
                 } )
-            } ).toThrow( 'No environment file found for stage type: development' )
+            } ).toThrow( 'Error reading environment file' )
         } )
     } )
 
@@ -205,9 +209,9 @@ describe( 'ServerManager Edge Cases and Error Handling', () => {
             
             mockFs.readFileSync.mockReturnValue( 'SOME_OTHER_VAR=value\n' ) // Missing required vars
             
-            const result = ServerManager.getWebhookEnv( { 
-                stageType: 'test', 
-                serverConfig 
+            const result = ServerManager.getWebhookEnv( {
+                stageType: 'test',
+                envPath: testEnvPath
             } )
             
             expect( consoleSpy ).toHaveBeenCalledWith( 'Missing WEBHOOK_SECRET in .env file' )
@@ -229,7 +233,7 @@ describe( 'ServerManager Edge Cases and Error Handling', () => {
                 envObject, 
                 silent: true,
                 stageType: 'development',
-                baseUrls: testBaseUrls
+                baseUrl: testBaseUrl
             } )
             
             expect( mcpAuthMiddlewareConfig ).toBeDefined()
@@ -243,12 +247,16 @@ describe( 'ServerManager Edge Cases and Error Handling', () => {
                 env: null
             }
             
+            mockFs.readFileSync.mockImplementation( () => {
+                throw new Error( 'File not found' )
+            } )
+
             expect( () => {
-                ServerManager.getEnvObject( { 
-                    stageType: 'invalid', 
-                    serverConfig 
+                ServerManager.getEnvObject( {
+                    stageType: 'invalid',
+                    envPath: 'invalid/path.env'
                 } )
-            } ).toThrow( 'No environment file found for stage type: invalid' )
+            } ).toThrow( 'Error reading environment file: invalid/path.env' )
         } )
     } )
 

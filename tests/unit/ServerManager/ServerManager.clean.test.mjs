@@ -1,5 +1,5 @@
 import { ServerManager } from '../../../src/index.mjs'
-import { testBaseUrls } from '../../helpers/config.mjs'
+import { testBaseUrl } from '../../helpers/config.mjs'
 import { jest } from '@jest/globals'
 
 describe( 'ServerManager Clean Tests', () => {
@@ -88,7 +88,7 @@ describe( 'ServerManager Clean Tests', () => {
                 envObject, 
                 silent: true,
                 stageType: 'development',
-                baseUrls: testBaseUrls
+                baseUrl: testBaseUrl
             })
 
             expect(mcpAuthMiddlewareConfig).toBeDefined()
@@ -113,7 +113,7 @@ describe( 'ServerManager Clean Tests', () => {
                 envObject, 
                 silent: true,
                 stageType: 'development',
-                baseUrls: testBaseUrls
+                baseUrl: testBaseUrl
             })
 
             expect(mcpAuthMiddlewareConfig.routes).toEqual({})

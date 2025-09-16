@@ -1,11 +1,8 @@
 // Central test configuration for getMcpAuthMiddlewareConfig breaking change
 // Based on CLAUDE.md standards: centralized constants, no hardcoded values
 
-const testBaseUrls = {
-    'development': 'http://localhost:3000',
-    'production': 'http://test-production.com',
-    'test': 'http://localhost:3000'
-}
+const testBaseUrl = 'http://localhost:3000'
+const testEnvPath = './.community.env.example'
 
 const defaultStageType = 'development'
 
@@ -18,19 +15,19 @@ const testEnvObject = {
 }
 
 // Helper function to get complete getMcpAuthMiddlewareConfig parameters
-const getMcpAuthTestParams = ({ 
-    activeRoutes = [], 
-    envObject = testEnvObject, 
-    silent = true, 
+const getMcpAuthTestParams = ({
+    activeRoutes = [],
+    envObject = testEnvObject,
+    silent = true,
     stageType = defaultStageType,
-    baseUrls = testBaseUrls 
+    baseUrl = testBaseUrl
 } = {}) => {
     return {
         activeRoutes,
         envObject,
         silent,
         stageType,
-        baseUrls
+        baseUrl
     }
 }
 
@@ -69,8 +66,9 @@ const testRoutes = [
     }
 ]
 
-export { 
-    testBaseUrls,
+export {
+    testBaseUrl,
+    testEnvPath,
     defaultStageType,
     testEnvObject,
     getMcpAuthTestParams,
