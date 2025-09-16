@@ -1,5 +1,6 @@
 import { getArrayOfSchemas } from './custom-schemas/helpers/utils.mjs'
 import { FlowMCP } from 'flowmcp'
+import { ServerManager } from './src/index.mjs'
 
 
 const config = {
@@ -76,6 +77,9 @@ class ConfigManager {
             BASE_URL = SERVER_URL
         }
 
+        // Normalize URL based on stageType
+        BASE_URL = ServerManager.normalizeUrlForStage( { url: BASE_URL, stageType } )
+
         const { cors, landingPage, x402 } = config
         const routes = await Promise.all( [
             // this.#getRouteErc20( { BEARER_TOKEN_EERC20 } ),
@@ -83,8 +87,8 @@ class ConfigManager {
             // this.#getRouteLukso(),
             // this.#getRouteChainlinkPrices(),
             // this.#getRouteInseight( { BEARER_TOKEN_INSEIGHT } ),
-            this.#getRouteAuth0( { AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET, BASE_URL } ),
-            this.#getRouteScalekit( { SCALEKIT_ENVIRONMENT_URL, SCALEKIT_MCP_ID, SCALEKIT_CLIENT_ID, SCALEKIT_CLIENT_SECRET, BASE_URL } )
+            this.#getRouteAuth0( { AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET, BASE_URL, stageType } ),
+            this.#getRouteScalekit( { SCALEKIT_ENVIRONMENT_URL, SCALEKIT_MCP_ID, SCALEKIT_CLIENT_ID, SCALEKIT_CLIENT_SECRET, BASE_URL, stageType } )
         ] )
         const serverConfig = { silent, cors, landingPage, routes, x402 }
 
@@ -211,7 +215,7 @@ class ConfigManager {
     }
 
 
-    static async #getRouteAuth0( { AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET, BASE_URL } ) {
+    static async #getRouteAuth0( { AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET, BASE_URL, stageType } ) {
         return {
             'routePath': '/auth0-route',
             'name': 'Auth0',
@@ -225,11 +229,11 @@ class ConfigManager {
                 'clientId': `${AUTH0_CLIENT_ID}`,
                 'clientSecret': `${AUTH0_CLIENT_SECRET}`,
                 'scope': 'openid profile email',
-                'audience': `${BASE_URL}/auth0-route/sse`,
+                'audience': ServerManager.normalizeUrlForStage( { url: `${BASE_URL}/auth0-route/sse`, stageType } ),
                 'authFlow': 'authorization_code',
                 'requiredScopes': ['openid', 'profile', 'email'],
                 'requiredRoles': [],
-                'resourceUri': `${BASE_URL}/auth0-route/sse`,
+                'resourceUri': ServerManager.normalizeUrlForStage( { url: `${BASE_URL}/auth0-route/sse`, stageType } ),
                 // 'forceHttps': false <--- uses stageType to set this
             },
             'schemas': async () => {
@@ -249,7 +253,7 @@ class ConfigManager {
     }
 
 
-    static async #getRouteScalekit( { SCALEKIT_ENVIRONMENT_URL, SCALEKIT_MCP_ID, SCALEKIT_CLIENT_ID, SCALEKIT_CLIENT_SECRET, BASE_URL } ) {
+    static async #getRouteScalekit( { SCALEKIT_ENVIRONMENT_URL, SCALEKIT_MCP_ID, SCALEKIT_CLIENT_ID, SCALEKIT_CLIENT_SECRET, BASE_URL, stageType } ) {
         return {
             'routePath': '/scalekit-route',
             'name': 'ScaleKit Route',
@@ -263,11 +267,10 @@ class ConfigManager {
                 'mcpId': `${SCALEKIT_MCP_ID}`,
                 'clientId': `${SCALEKIT_CLIENT_ID}`,
                 'clientSecret': `${SCALEKIT_CLIENT_SECRET}`,
-                'resource': `${BASE_URL}/scalekit-route`,
-                'resourceDocumentation': `${BASE_URL}/scalekit-route/docs`,
+                'resource': ServerManager.normalizeUrlForStage( { url: `${BASE_URL}/scalekit-route`, stageType } ),
+                'resourceDocumentation': ServerManager.normalizeUrlForStage( { url: `${BASE_URL}/scalekit-route/docs`, stageType } ),
                 'scope': 'openid profile mcp:tools mcp:resources:read mcp:resources:write',
-                'authFlow': 'authorization_code',
-                'forceHttps': false
+                'authFlow': 'authorization_code'
             },
             'schemas': async () => {
                 const arrayOfSchemas = await getArrayOfSchemas( {

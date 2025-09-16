@@ -263,7 +263,7 @@ describe('WebhookServer Tests', () => {
             const pm2Names = ['community-server', 'test-server', 'production-app']
             
             pm2Names.forEach(pm2Name => {
-                const expectedCommand = `git pull origin main && npm install && pm2 restart ${pm2Name}`
+                const expectedCommand = `cd ~/community-server &&rm -rf package-lock.json && git pull origin main && npm install && pm2 restart ${pm2Name}`
                 
                 expect(expectedCommand).toContain('git pull origin main')
                 expect(expectedCommand).toContain('npm install')

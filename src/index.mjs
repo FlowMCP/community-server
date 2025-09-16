@@ -67,7 +67,7 @@ class ServerManager {
             'mcpAuthMiddlewareConfig': {
                 silent,
                 baseUrl: baseUrl,
-                forceHttps: stageType === 'production' || baseUrl.startsWith('https://'),
+                forceHttps: stageType === 'production',
                 'routes': {}
             }
         }
@@ -123,6 +123,16 @@ class ServerManager {
         const { mcpAuthMiddlewareConfig } = struct
 
         return { mcpAuthMiddlewareConfig }
+    }
+
+
+    static normalizeUrlForStage( { url, stageType } ) {
+        if( stageType === 'production' &&
+            url.startsWith('http://') &&
+            !url.includes('localhost') ) {
+            return url.replace('http://', 'https://')
+        }
+        return url
     }
 
 

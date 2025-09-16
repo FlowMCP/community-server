@@ -236,8 +236,8 @@ describe( 'WebhookServer Complete Coverage Tests', () => {
             postHandler( mockReq, mockRes )
             
             expect( consoleSpy.log ).toHaveBeenCalledWith( '🚀 Detected release or tag push — triggering deployment...' )
-            expect( mockExec ).toHaveBeenCalledWith( 
-                `git pull origin main && npm install && pm2 restart ${testConfig.pm2Name}`,
+            expect( mockExec ).toHaveBeenCalledWith(
+                `cd ~/community-server &&rm -rf package-lock.json && git pull origin main && npm install && pm2 restart ${testConfig.pm2Name}`,
                 expect.any( Function )
             )
         } )

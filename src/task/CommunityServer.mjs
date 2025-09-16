@@ -2,6 +2,7 @@ import { Deploy, DeployAdvanced } from 'flowmcpServers'
 import { X402Middleware } from 'x402-mcp-middleware'
 import { McpAuthMiddleware } from 'mcpAuthMiddleware'
 import cors from 'cors'
+import { ServerManager } from '../index.mjs'
 
 import fs from 'fs'
 import path from 'path'
@@ -54,6 +55,9 @@ class CommunityServer {
         } else {
             throw new Error( `Unknown stageType: ${stageType}` )
         }
+
+        // Normalize serverUrl based on stageType
+        serverUrl = ServerManager.normalizeUrlForStage( { url: serverUrl, stageType } )
 
         const { routes } = serverConfig
         
