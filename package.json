@@ -1,6 +1,6 @@
 {
   "name": "community-server",
-  "version": "2.3.3",
+  "version": "2.4.0",
   "description": "",
   "main": "main.js",
   "scripts": {
@@ -10,10 +10,7 @@
     "test": "NODE_OPTIONS='--experimental-vm-modules' ./node_modules/.bin/jest --detectOpenHandles --verbose",
     "test:summary": "NODE_OPTIONS='--experimental-vm-modules' npx jest --detectOpenHandles",
     "test:single": "NODE_OPTIONS='--experimental-vm-modules' npx jest",
-    "test:coverage:src": "NODE_OPTIONS='--experimental-vm-modules' npx jest --coverage --collectCoverageFrom='src/**/*.mjs'",
-    "test:manual:free": "node tests/manual/test-community-routes.mjs authType=free serverPath=tests/manual/test-community-server.mjs",
-    "test:manual:bearer": "node tests/manual/test-community-routes.mjs authType=staticBearer serverPath=tests/manual/test-community-server.mjs",
-    "test:manual:oauth": "node tests/manual/test-community-routes.mjs authType=oauth21_scalekit serverPath=tests/manual/test-community-server.mjs"
+    "test:coverage:src": "NODE_OPTIONS='--experimental-vm-modules' npx jest --coverage --collectCoverageFrom='src/**/*.mjs'"
   },
   "keywords": [],
   "author": "",

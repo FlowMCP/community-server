@@ -1,5 +1,5 @@
 // import { ConfigManager } from './serverConfig.mjs'
-import { ConfigManager2 } from './ConfigManager2.mjs'
+import { ConfigManager } from './ConfigManager.mjs'
 
 // import { serverConfig } from './serverConfig.mjs'
 import { ServerManager } from './src/index.mjs'
@@ -19,7 +19,7 @@ const { stageType } = ServerManager
     .getStageType( { 'argvs': process.argv } )
 const { envObject } = ServerManager
     .getEnvObject( { stageType, envPath } )
-const { serverConfig, baseUrl } = await ConfigManager2
+const { serverConfig, baseUrl } = await ConfigManager
     .getServerConfig( { stageType, envObject, routeNames } )
 const { silent, routes, x402 } = serverConfig
 

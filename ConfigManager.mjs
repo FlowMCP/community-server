@@ -61,7 +61,7 @@ const config = {
 
 
 class ConfigManager {
-    static async getServerConfig( { silent=false, stageType, envObject } ) {
+    static async getServerConfig( { silent=false, stageType, envObject, routeNames } ) {
         const {
             BEARER_TOKEN_MASTER,
             SCALEKIT_ENVIRONMENT_URL, SCALEKIT_MCP_ID, SCALEKIT_CLIENT_ID, SCALEKIT_CLIENT_SECRET,
@@ -78,22 +78,69 @@ class ConfigManager {
         // Normalize URL based on stageType
         BASE_URL = ServerManager.normalizeUrlForStage( { url: BASE_URL, stageType } )
 
+        const arrayOfRoutes = routeNames
+            .map( ( routeName ) => {
+                if( routeName === 'getFreeTest' ) { return ConfigManager.getFreeTest() }
+                else if( routeName === 'getBearerTest' ) { return ConfigManager.getBearerTest( { BEARER_TOKEN_MASTER } ) }
+                else if( routeName === 'getScaleKit' ) { return ConfigManager.getScalekit( { SCALEKIT_ENVIRONMENT_URL, SCALEKIT_MCP_ID, SCALEKIT_CLIENT_ID, SCALEKIT_CLIENT_SECRET, BASE_URL, stageType } ) }
+                else if( routeName === 'getErc20' ) { return ConfigManager.getErc20( { BEARER_TOKEN_MASTER } ) }
+                else if( routeName === 'getX402' ) { return ConfigManager.getX402() }
+                else if( routeName === 'getLukso' ) { return ConfigManager.getLukso() }
+                else if( routeName === 'getChainlinkPrices' ) { return ConfigManager.getChainlinkPrices() }
+                else if( routeName === 'getInseight' ) { return ConfigManager.getInseight( { BEARER_TOKEN_MASTER } ) }
+                else { throw new Error( `Unknown route name: ${routeName}` ) }
+            } )
+
         const { cors, landingPage, x402 } = config
-        const routes = await Promise.all( [
-            this.#getRouteErc20( { BEARER_TOKEN_MASTER } ),
-            // this.#getRouteX402(),
-            // this.#getRouteLukso(),
-            // this.#getRouteChainlinkPrices(),
-            this.#getRouteInseight( { BEARER_TOKEN_MASTER } ),
-            this.#getRouteScalekit( { SCALEKIT_ENVIRONMENT_URL, SCALEKIT_MCP_ID, SCALEKIT_CLIENT_ID, SCALEKIT_CLIENT_SECRET, BASE_URL, stageType } )
-        ] )
+        const routes = await Promise.all( arrayOfRoutes )
         const serverConfig = { silent, cors, landingPage, routes, x402 }
 
         return { serverConfig, baseUrl: BASE_URL }
     }
 
 
-    static async #getRouteErc20( { BEARER_TOKEN_MASTER } ) {
+    static async getFreeTest( {}={} ) {
+        return {
+            'routePath': '/free',
+            'name': 'Free Test Route',
+            'description': 'A free test route with no authentication, using the ping schema.',
+            'bearerIsPublic': true,
+            'protocol': 'streamable',
+            'auth': null,
+            'schemas': async () => {
+                const arrayOfSchemas = []
+                const { schema: pingSchema } = await import( 'schemaImporter/schemas/v1.2.0/x402/ping.mjs' )
+                arrayOfSchemas.push( pingSchema )
+
+                return { arrayOfSchemas }
+            }
+        }
+    }
+
+
+    static async getBearerTest( { BEARER_TOKEN_MASTER } ) {
+        return {
+            'routePath': '/bearer-streamable',
+            'name': 'Bearer Token Test Route',
+            'description': 'A test route protected by a static bearer token, using the ping schema.',
+            'bearerIsPublic': false,
+            'protocol': 'streamable',
+            'auth': {
+                'enabled': true,
+                'authType': 'staticBearer',
+                'token': BEARER_TOKEN_MASTER
+            },
+            'schemas': async () => {
+                const arrayOfSchemas = []
+                const { schema: pingSchema } = await import( 'schemaImporter/schemas/v1.2.0/x402/ping.mjs' )
+                arrayOfSchemas.push( pingSchema )
+                return { arrayOfSchemas }
+            }
+        }
+    }
+
+
+    static async getErc20( { BEARER_TOKEN_MASTER } ) {
         return {
             'routePath': '/eerc20',
             'name': 'Encrypted ERC20',
@@ -101,9 +148,9 @@ class ConfigManager {
             'auth': {
                 'enabled': true,
                 'authType': 'staticBearer',
-                'token': 'BEARER_TOKEN_MASTER'
+                'token': BEARER_TOKEN_MASTER
             },
-            'protocol': 'sse',
+            'protocol': 'streamable',
             'schemas': async () => {
                 const { schema: ohlcvSchema } = await import( 'schemaImporter/schemas/v1.2.0/ohlcv/olhcv-moralis-evm.mjs' )
                 const { schema: blocknativeSchema } = await import( 'schemaImporter/schemas/v1.2.0/blocknative/gasprice.mjs' )
@@ -116,15 +163,13 @@ class ConfigManager {
     }
 
 
-    static async #getRouteX402( {}={} ) {
+    static async getX402( {}={} ) {
         return {
             'routePath': '/x402',
             'name': 'AgentPays - MCP with M2M Payment',
             'description': "Experimental server for x402 payments using USDC on Base Sepolia. Offers payment functionality for Model Context Payment (MCP) via 'exact' scheme (EIP-3009). Use with MCP Inspector or Proxy-enabled x402 clients. More info: https://github.com/FlowMCP/x402-experiments",
-            'auth': {
-                'enabled': false
-            },
-            'protocol': 'sse',
+            'auth': null,
+            'protocol': 'streamable',
             'schemas': async () => {
                 const arrayOfSchemas = await getArrayOfSchemas( {
                     includeNamespaces: [ 'x402', 'pinata' ],
@@ -139,15 +184,13 @@ class ConfigManager {
     }
 
 
-    static async #getRouteLukso( {}={} ) {
+    static async getLukso( {}={} ) {
         return {
             'routePath': '/lukso',
             'name': 'LUKSO Network - Community MCP Server',
             'description': 'Provides access to the LUKSO Network for search and redirect functionality on mainnet and testnet.',
-            'auth': {
-                'enabled': false
-            },
-            'protocol': 'sse',
+            'auth': null,
+            'protocol': 'streamable',
             'schemas':  async () => {
                 const arrayOfSchemas = await getArrayOfSchemas( {
                     includeNamespaces: [ 'luksoNetwork' ],
@@ -160,15 +203,13 @@ class ConfigManager {
     }
 
 
-    static async #getRouteChainlinkPrices() {
+    static async getChainlinkPrices() {
         return {
             'routePath': '/chainlink/prices',
             'name': 'ChainProbe - Onchain Chainlink Price Feeds for M2M Processing',
             'description': 'Serves all onchain Chainlink price feeds from an EVM chain in a single x402-enabled request. Ideal for machine-to-machine (M2M) data retrieval and autonomous agents. Payments enforced via USDC using EIP-3009 (exact scheme) on Base Sepolia.',
-            'auth': {
-                'enabled': false
-            },
-            'protocol': 'sse',
+            'auth': null,
+            'protocol': 'streamable',
             'schemas': async () => {
                 const arrayOfSchemas = await getArrayOfSchemas( {
                     includeNamespaces: [ 'chainlinkMulticall' ],
@@ -183,7 +224,7 @@ class ConfigManager {
     }
 
 
-    static async #getRouteInseight( { BEARER_TOKEN_MASTER } ) {
+    static async getInseight( { BEARER_TOKEN_MASTER } ) {
         return {
             'routePath': '/inseight',
             'name': 'Inseight - A SEI Blockchain MCP Server',
@@ -191,9 +232,9 @@ class ConfigManager {
             'auth': {
                 'enabled': true,
                 'authType': 'staticBearer',
-                'token': 'BEARER_TOKEN_MASTER'
+                'token': BEARER_TOKEN_MASTER
             },
-            'protocol': 'sse',
+            'protocol': 'streamable',
             'schemas': async () => {
                 const { schema: spaceid } = await import( 'schemaImporter/schemas/v1.2.0/spaceid/spaceid.mjs' )
                 const { schema: ensResolution } = await import( 'schemaImporter/schemas/v1.2.0/ens/ens-resolution.mjs' )
@@ -211,13 +252,13 @@ class ConfigManager {
         }
     }
 
-
-    static async #getRouteAuth0( { AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET, BASE_URL, stageType } ) {
+/*
+    static async getAuth0( { AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET, BASE_URL, stageType } ) {
         return {
             'routePath': '/auth0-route',
             'name': 'Auth0',
             'description': 'Testing ScaleKit OAuth 2.1 configuration with MCP schemas',
-            'protocol': 'sse',
+            'protocol': 'streamable',
             'auth': {
                 'enabled': true,
                 'authType': 'oauth21_auth0',
@@ -248,11 +289,11 @@ class ConfigManager {
             }
         }
     }
+*/
 
-
-    static async #getRouteScalekit( { SCALEKIT_ENVIRONMENT_URL, SCALEKIT_MCP_ID, SCALEKIT_CLIENT_ID, SCALEKIT_CLIENT_SECRET, BASE_URL, stageType } ) {
+    static async getScalekit( { SCALEKIT_ENVIRONMENT_URL, SCALEKIT_MCP_ID, SCALEKIT_CLIENT_ID, SCALEKIT_CLIENT_SECRET, BASE_URL, stageType } ) {
         return {
-            'routePath': '/scalekit-route',
+            'routePath': '/scalekit-streamable',
             'name': 'ScaleKit Route',
             'description': 'Testing ScaleKit OAuth 2.1 configuration with MCP schemas',
             'bearerIsPublic': false,
