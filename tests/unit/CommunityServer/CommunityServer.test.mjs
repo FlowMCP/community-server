@@ -81,7 +81,7 @@ describe('CommunityServer Tests', () => {
         test('should handle different envObject configurations', () => {
             const envConfigs = [
                 { SERVER_URL: 'http://localhost', SERVER_PORT: '3000' },
-                { SERVER_URL: 'https://example.com', SERVER_PORT: '8080' },
+                { SERVER_URL: 'https://example.com', SERVER_PORT: '3000' },
                 { SERVER_URL: 'http://192.168.1.1', SERVER_PORT: '5000' }
             ]
 
@@ -132,8 +132,8 @@ describe('CommunityServer Tests', () => {
                 },
                 {
                     stageType: 'test',
-                    envObject: { SERVER_URL: 'http://localhost', SERVER_PORT: '8080' },
-                    expectedUrl: 'http://localhost:8080'
+                    envObject: { SERVER_URL: 'http://localhost', SERVER_PORT: '3000' },
+                    expectedUrl: 'http://localhost:3000'
                 }
             ]
 
@@ -206,12 +206,12 @@ describe('CommunityServer Tests', () => {
                 stageType: 'test',
                 objectOfSchemaArrays: {},
                 serverConfig: { routes: [] },
-                envObject: { SERVER_URL: 'http://localhost', SERVER_PORT: '8080' },
+                envObject: { SERVER_URL: 'http://localhost', SERVER_PORT: '3000' },
                 managerVersion: '1.0.0'
             }
 
             const expectedUrl = `${params.envObject.SERVER_URL}:${params.envObject.SERVER_PORT}`
-            expect(expectedUrl).toBe('http://localhost:8080')
+            expect(expectedUrl).toBe('http://localhost:3000')
         })
     })
 
@@ -327,7 +327,7 @@ describe('CommunityServer Tests', () => {
         test('should handle different port formats', () => {
             const portConfigs = [
                 { SERVER_PORT: '3000' },
-                { SERVER_PORT: '8080' },
+                { SERVER_PORT: '3000' },
                 { SERVER_PORT: '5000' }
             ]
 

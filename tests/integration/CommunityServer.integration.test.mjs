@@ -80,11 +80,11 @@ jest.unstable_mockModule( 'node:path', () => ({
 }) )
 jest.unstable_mockModule( 'url', () => ({ 
     fileURLToPath: jest.fn( () => '/test/file.mjs' ),
-    format: jest.fn( () => 'http://localhost:8080' )
+    format: jest.fn( () => 'http://localhost:3000' )
 }) )
 jest.unstable_mockModule( 'node:url', () => ({ 
     fileURLToPath: jest.fn( () => '/test/file.mjs' ),
-    format: jest.fn( () => 'http://localhost:8080' )
+    format: jest.fn( () => 'http://localhost:3000' )
 }) )
 jest.unstable_mockModule( 'cors', () => ({ default: mockCors }) )
 
@@ -117,7 +117,7 @@ describe( 'CommunityServer Integration Tests', () => {
         },
         envObject: {
             SERVER_URL: 'http://localhost',
-            SERVER_PORT: '8080'
+            SERVER_PORT: '3000'
         },
         managerVersion: '1.0.0-test',
         x402Config: {
@@ -169,9 +169,9 @@ describe( 'CommunityServer Integration Tests', () => {
 
         test( 'should determine server URL based on stage type', async () => {
             const testCases = [
-                { stageType: 'development', expected: 'http://localhost:8080' },
+                { stageType: 'development', expected: 'http://localhost:3000' },
                 { stageType: 'production', expected: 'http://localhost' },
-                { stageType: 'test', expected: 'http://localhost:8080' }
+                { stageType: 'test', expected: 'http://localhost:3000' }
             ]
             
             for( const { stageType, expected } of testCases ) {
@@ -204,7 +204,7 @@ describe( 'CommunityServer Integration Tests', () => {
         test( 'should handle port availability check for different ports', async () => {
             const portTestCases = [
                 { port: '3000' },
-                { port: '8080' },
+                { port: '3000' },
                 { port: '9000' }
             ]
             
@@ -244,7 +244,7 @@ describe( 'CommunityServer Integration Tests', () => {
                     } ),
                     envObject: testConfig.envObject,
                     rootUrl: 'http://localhost',
-                    serverPort: '8080'
+                    serverPort: '3000'
                 } )
             )
         } )
@@ -329,7 +329,7 @@ describe( 'CommunityServer Integration Tests', () => {
             
             // Validate route URL construction logic
             const { routes } = testConfig.serverConfig
-            const serverUrl = 'http://localhost:8080'
+            const serverUrl = 'http://localhost:3000'
             
             routes.forEach( ( route ) => {
                 const { routePath, bearerIsPublic, bearerToken } = route
@@ -386,7 +386,7 @@ describe( 'CommunityServer Integration Tests', () => {
             expect( testConfig.silent ).toBe( true )
             expect( testConfig.stageType ).toBe( 'test' )
             expect( testConfig.envObject.SERVER_URL ).toBe( 'http://localhost' )
-            expect( testConfig.envObject.SERVER_PORT ).toBe( '8080' )
+            expect( testConfig.envObject.SERVER_PORT ).toBe( '3000' )
             expect( testConfig.serverConfig.routes ).toHaveLength( 1 )
             expect( testConfig.objectOfSchemaArrays['/test-route'] ).toHaveLength( 1 )
         } )

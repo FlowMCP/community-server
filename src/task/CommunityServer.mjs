@@ -26,17 +26,40 @@ class CommunityServer {
         
         // Create and apply auth middleware if config is provided
         if( mcpAuthMiddlewareConfig ) {
-            const authMiddleware = await McpAuthMiddleware
-                .create( {
-                    routes: mcpAuthMiddlewareConfig.routes,
-                    silent: mcpAuthMiddlewareConfig.silent,
-                    baseUrl: mcpAuthMiddlewareConfig.baseUrl,
-                    forceHttps: mcpAuthMiddlewareConfig.forceHttps
-                } )
+            // Debug output for auth config
+            if( !silent && stageType === 'production' ) {
+                console.log( '🔐 Auth Middleware Config (v1.0):' )
+                console.log( '   baseUrl:', mcpAuthMiddlewareConfig.baseUrl )
+                console.log( '   forceHttps:', mcpAuthMiddlewareConfig.forceHttps )
+
+                if( mcpAuthMiddlewareConfig.staticBearer ) {
+                    console.log( '   staticBearer routes:', mcpAuthMiddlewareConfig.staticBearer.attachedRoutes )
+                }
+
+                if( mcpAuthMiddlewareConfig.oauth21 ) {
+                    console.log( '   oauth21 routes:', mcpAuthMiddlewareConfig.oauth21.attachedRoutes )
+                    if( mcpAuthMiddlewareConfig.oauth21.options.resource ) {
+                        console.log( '   oauth21 resource:', mcpAuthMiddlewareConfig.oauth21.options.resource )
+                    }
+                }
+            }
+
+            // Create middleware config without top-level properties
+            const middlewareConfig = { ...mcpAuthMiddlewareConfig }
+            delete middlewareConfig.silent
+            delete middlewareConfig.baseUrl
+            delete middlewareConfig.forceHttps
+
+            // Add baseUrl back to the config object
+            if( mcpAuthMiddlewareConfig.baseUrl ) {
+                middlewareConfig.baseUrl = mcpAuthMiddlewareConfig.baseUrl
+            }
+
+            const authMiddleware = await McpAuthMiddleware.create( middlewareConfig )
             app.use( authMiddleware.router() )
         }
         
-        if( stageType !== 'test' ) {
+        if( stageType === 'production' ) {
             const { chainId, chainName, contracts, paymentOptions, restrictedCalls } = x402Config
             const middleware = await X402Middleware
                 .create( { chainId, chainName, contracts, paymentOptions, restrictedCalls, x402Credentials, x402PrivateKey } )
@@ -93,12 +116,12 @@ class CommunityServer {
         
         try {
             DeployAdvanced
-                .start( { 
-                    arrayOfRoutes, 
-                    objectOfSchemaArrays, 
-                    envObject, 
-                    rootUrl, 
-                    serverPort 
+                .start( {
+                    arrayOfRoutes,
+                    objectOfSchemaArrays,
+                    envObject,
+                    rootUrl,
+                    port: parseInt(serverPort, 10)
                 } )
         } catch( error ) {
             if( error.code === 'EADDRINUSE' || error.message.includes( 'EADDRINUSE' ) ) {

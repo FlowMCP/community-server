@@ -65,7 +65,7 @@ describe('WebhookServer Tests', () => {
                 },
                 {
                     webhookSecret: 'secret-with-special-chars!@#$%',
-                    webhookPort: 8080,
+                    webhookPort: 3000,
                     pm2Name: 'server-name-with-dashes',
                     managerVersion: 'v2.1.3-beta'
                 }
@@ -120,7 +120,7 @@ describe('WebhookServer Tests', () => {
 
     describe('Configuration handling', () => {
         test('should handle port number validation', () => {
-            const validPorts = [3000, 3001, 8080, 9000, 5000]
+            const validPorts = [3000, 3001, 3002, 9000, 5000]
             
             validPorts.forEach(port => {
                 expect(Number.isInteger(port)).toBe(true)

@@ -55,11 +55,11 @@ jest.unstable_mockModule( 'node:path', () => ({
 }) )
 jest.unstable_mockModule( 'url', () => ({ 
     fileURLToPath: jest.fn( () => '/test/file.mjs' ),
-    format: jest.fn( () => 'http://localhost:8080' )
+    format: jest.fn( () => 'http://localhost:3000' )
 }) )
 jest.unstable_mockModule( 'node:url', () => ({ 
     fileURLToPath: jest.fn( () => '/test/file.mjs' ),
-    format: jest.fn( () => 'http://localhost:8080' )
+    format: jest.fn( () => 'http://localhost:3000' )
 }) )
 jest.unstable_mockModule( 'cors', () => ({ default: mockCors }) )
 
@@ -94,7 +94,7 @@ describe( 'CommunityServer Simple Coverage Tests', () => {
                     landingPage: { name: 'Test', description: 'Test' },
                     routes: [{ routePath: '/test', name: 'Test Route' }]
                 },
-                envObject: { SERVER_URL: 'http://localhost', SERVER_PORT: '8080' },
+                envObject: { SERVER_URL: 'http://localhost', SERVER_PORT: '3000' },
                 managerVersion: '1.0.0'
             }
             
@@ -114,7 +114,7 @@ describe( 'CommunityServer Simple Coverage Tests', () => {
                     landingPage: { name: 'Test', description: 'Test' },
                     routes: [{ routePath: '/test', name: 'Test Route' }]
                 },
-                envObject: { SERVER_URL: 'http://localhost', SERVER_PORT: '8080' },
+                envObject: { SERVER_URL: 'http://localhost', SERVER_PORT: '3000' },
                 managerVersion: '1.0.0'
             }
             
@@ -132,7 +132,7 @@ describe( 'CommunityServer Simple Coverage Tests', () => {
                     landingPage: { name: 'Test', description: 'Test' },
                     routes: [{ routePath: '/test', name: 'Test Route' }]
                 },
-                envObject: { SERVER_URL: 'http://localhost', SERVER_PORT: '8080' },
+                envObject: { SERVER_URL: 'http://localhost', SERVER_PORT: '3000' },
                 managerVersion: '1.0.0'
             }
             
@@ -154,7 +154,7 @@ describe( 'CommunityServer Simple Coverage Tests', () => {
                     landingPage: { name: 'Test', description: 'Test' },
                     routes: []
                 },
-                envObject: { SERVER_URL: 'http://localhost', SERVER_PORT: '8080' },
+                envObject: { SERVER_URL: 'http://localhost', SERVER_PORT: '3000' },
                 managerVersion: '1.0.0',
                 x402Config: {
                     chainId: 1,

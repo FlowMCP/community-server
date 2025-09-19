@@ -94,7 +94,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
                     auth: {
                         enabled: true,
                         authType: 'staticBearer',
-                        token: 'BEARER_TOKEN_EERC20'
+                        token: 'BEARER_TOKEN_MASTER'
                     }
                 },
                 {
@@ -106,7 +106,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
             ]
             
             const envObject = {
-                'BEARER_TOKEN_EERC20': 'test-eerc20-token'
+                'BEARER_TOKEN_MASTER': 'test-master-token'
             }
             
             const { mcpAuthMiddlewareConfig } = ServerManager.getMcpAuthMiddlewareConfig( { 
@@ -118,14 +118,13 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
             } )
             
             expect( mcpAuthMiddlewareConfig ).toBeDefined()
-            expect( mcpAuthMiddlewareConfig.routes ).toBeDefined()
-            expect( mcpAuthMiddlewareConfig.routes[ '/eerc20/sse' ] ).toBeDefined()
-            expect( mcpAuthMiddlewareConfig.routes[ '/eerc20/sse' ].authType ).toBe( 'staticBearer' )
-            expect( mcpAuthMiddlewareConfig.routes[ '/eerc20/sse' ].token ).toBe( 'test-eerc20-token' )
-            expect( mcpAuthMiddlewareConfig.routes[ '/lukso/sse' ] ).toBeUndefined()
+            expect( mcpAuthMiddlewareConfig.staticBearer ).toBeDefined()
+            expect( mcpAuthMiddlewareConfig.staticBearer.tokenSecret ).toBe( 'test-master-token' )
+            expect( mcpAuthMiddlewareConfig.staticBearer.attachedRoutes ).toContain( '/eerc20/sse' )
+            expect( mcpAuthMiddlewareConfig.staticBearer.attachedRoutes ).not.toContain( '/lukso/sse' )
         } )
 
-        test( 'should handle OAuth2 Auth0 configuration with template variables', () => {
+        test( 'should reject deprecated OAuth2 Auth0 configuration', () => {
             const activeRoutes = [
                 {
                     routePath: '/etherscan-ping',
@@ -145,19 +144,15 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
                 'AUTH0_CLIENT_SECRET': 'test-client-secret'
             }
             
-            const { mcpAuthMiddlewareConfig } = ServerManager.getMcpAuthMiddlewareConfig( { 
-                activeRoutes, 
-                envObject, 
-                silent: true,
-                stageType: 'development',
-                baseUrl: testBaseUrl
-            } )
-            
-            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping/sse' ] ).toBeDefined()
-            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping/sse' ].authType ).toBe( 'oauth21_auth0' )
-            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping/sse' ].providerUrl ).toBe( 'https://dev-example.us.auth0.com' )
-            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping/sse' ].clientId ).toBe( 'test-client-id' )
-            expect( mcpAuthMiddlewareConfig.routes[ '/etherscan-ping/sse' ].clientSecret ).toBe( 'test-client-secret' )
+            expect(() => {
+                ServerManager.getMcpAuthMiddlewareConfig( {
+                    activeRoutes,
+                    envObject,
+                    silent: true,
+                    stageType: 'development',
+                    baseUrl: testBaseUrl
+                } )
+            }).toThrow( 'oauth21_auth0 is no longer supported in mcpAuthMiddleware v1.0' )
         } )
 
         test( 'should throw error for missing environment variables', () => {
@@ -198,7 +193,7 @@ describe( 'ServerManager - Comprehensive Tests for All Public Methods', () => {
             expect( envObject[ 'WEBHOOK_PORT' ] ).toBe( '3001' )
             expect( envObject[ 'PM2_NAME' ] ).toBe( 'community-server' )
             // Modern token naming convention
-            expect( envObject[ 'BEARER_TOKEN_EERC20' ] ).toBe( 'example-eerc20-token' )
+            expect( envObject[ 'BEARER_TOKEN_MASTER' ] ).toBe( 'example-master-token' )
             expect( envObject[ 'ACCOUNT_DEVELOPMENT2_PRIVATE_KEY' ] ).toBe( '0xEXAMPLE1234567890abcdef1234567890abcdef1234567890abcdef1234567890' )
         } )
 

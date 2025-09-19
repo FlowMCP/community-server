@@ -74,7 +74,7 @@ const { SSEClientTransport } = await import( '@modelcontextprotocol/sdk/client/s
 describe( 'MCP Client Mock Tests', () => {
     let client = null
     let transport = null
-    const serverPort = 8080
+    const serverPort = 3000
 
     beforeEach( () => {
         jest.clearAllMocks()

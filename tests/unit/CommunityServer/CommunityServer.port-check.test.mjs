@@ -107,7 +107,7 @@ describe( 'CommunityServer Port Availability Tests', () => {
             
             mockNet.createServer.mockReturnValue( mockServer )
 
-            const testPorts = [ '8080', '9000', '3001' ]
+            const testPorts = [ '3000', '9000', '3001' ]
 
             for( const port of testPorts ) {
                 const serverConfig = {
@@ -282,8 +282,12 @@ describe( 'CommunityServer Port Availability Tests', () => {
             }
 
             const mcpAuthMiddlewareConfig = {
-                routes: {
-                    '/test/sse': { authType: 'staticBearer', token: 'test-token' }
+                silent: true,
+                baseUrl: 'http://localhost:3000',
+                forceHttps: false,
+                staticBearer: {
+                    tokenSecret: 'test-token',
+                    attachedRoutes: ['/test/sse']
                 }
             }
 

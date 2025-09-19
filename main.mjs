@@ -1,15 +1,26 @@
-import { ConfigManager } from './serverConfig.mjs'
+// import { ConfigManager } from './serverConfig.mjs'
+import { ConfigManager2 } from './ConfigManager2.mjs'
+
 // import { serverConfig } from './serverConfig.mjs'
 import { ServerManager } from './src/index.mjs'
 
 
-const envPath = '../.community.env'
+const cfg = {
+    'envPath': './../.community.env',
+    'routeNames': [
+        'getFreeTest',
+        'getBearerTest',
+        'getScaleKit',
+    ]
+}
+
+const { envPath, routeNames } = cfg
 const { stageType } = ServerManager
     .getStageType( { 'argvs': process.argv } )
 const { envObject } = ServerManager
     .getEnvObject( { stageType, envPath } )
-const { serverConfig, baseUrl } = await ConfigManager
-    .getServerConfig( { stageType, envObject } )
+const { serverConfig, baseUrl } = await ConfigManager2
+    .getServerConfig( { stageType, envObject, routeNames } )
 const { silent, routes, x402 } = serverConfig
 
 const { x402Config, x402Credentials, x402PrivateKey } = ServerManager

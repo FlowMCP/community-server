@@ -8,7 +8,7 @@ describe( 'ServerManager Clean Tests', () => {
         test('should handle clean server configuration structure', () => {
             const testEnvObject = {
                 'SERVER_URL': 'http://localhost',
-                'SERVER_PORT': '8080', 
+                'SERVER_PORT': '3000', 
                 'BEARER_TOKEN_EERC20': 'test-clean-token'
             }
 
@@ -31,7 +31,7 @@ describe( 'ServerManager Clean Tests', () => {
             }
             
             // Test configuration structure
-            expect(testEnvObject.SERVER_PORT).toBe('8080')
+            expect(testEnvObject.SERVER_PORT).toBe('3000')
             expect(testEnvObject.SERVER_URL).toBe('http://localhost')
             expect(testServerConfig.routes).toHaveLength(1)
             expect(testServerConfig.routes[0].routePath).toBe('/clean/sse')
@@ -39,7 +39,7 @@ describe( 'ServerManager Clean Tests', () => {
             
             // Test URL construction logic
             const expectedUrl = `${testEnvObject.SERVER_URL}:${testEnvObject.SERVER_PORT}/clean/sse`
-            expect(expectedUrl).toBe('http://localhost:8080/clean/sse')
+            expect(expectedUrl).toBe('http://localhost:3000/clean/sse')
         })
 
         test('should handle different server configurations', () => {
@@ -53,8 +53,8 @@ describe( 'ServerManager Clean Tests', () => {
                     expectedUrl: 'https://example.com:443'
                 },
                 {
-                    env: { SERVER_URL: 'http://test.local', SERVER_PORT: '8080' },
-                    expectedUrl: 'http://test.local:8080'
+                    env: { SERVER_URL: 'http://test.local', SERVER_PORT: '3000' },
+                    expectedUrl: 'http://test.local:3000'
                 }
             ]
 
@@ -74,13 +74,13 @@ describe( 'ServerManager Clean Tests', () => {
                     auth: {
                         enabled: true,
                         authType: 'staticBearer',
-                        token: 'BEARER_TOKEN_EERC20'
+                        token: 'BEARER_TOKEN_MASTER'
                     }
                 }
             ]
 
             const envObject = {
-                'BEARER_TOKEN_EERC20': 'clean-test-token'
+                'BEARER_TOKEN_MASTER': 'clean-test-token'
             }
 
             const { mcpAuthMiddlewareConfig } = ServerManager.getMcpAuthMiddlewareConfig({ 
@@ -92,8 +92,9 @@ describe( 'ServerManager Clean Tests', () => {
             })
 
             expect(mcpAuthMiddlewareConfig).toBeDefined()
-            expect(mcpAuthMiddlewareConfig.routes['/eerc20/sse']).toBeDefined()
-            expect(mcpAuthMiddlewareConfig.routes['/eerc20/sse'].token).toBe('clean-test-token')
+            expect(mcpAuthMiddlewareConfig.staticBearer).toBeDefined()
+            expect(mcpAuthMiddlewareConfig.staticBearer.tokenSecret).toBe('clean-test-token')
+            expect(mcpAuthMiddlewareConfig.staticBearer.attachedRoutes).toContain('/eerc20/sse')
         })
 
         test('should handle disabled auth routes gracefully', () => {
@@ -116,7 +117,8 @@ describe( 'ServerManager Clean Tests', () => {
                 baseUrl: testBaseUrl
             })
 
-            expect(mcpAuthMiddlewareConfig.routes).toEqual({})
+            expect(mcpAuthMiddlewareConfig.staticBearer).toBeUndefined()
+            expect(mcpAuthMiddlewareConfig.oauth21).toBeUndefined()
         })
     })
 
@@ -147,7 +149,7 @@ describe( 'ServerManager Clean Tests', () => {
                 },
                 {
                     name: 'test environment', 
-                    env: { SERVER_URL: 'http://test.local', SERVER_PORT: '8080', BEARER_TOKEN_EERC20: 'test-token' }
+                    env: { SERVER_URL: 'http://test.local', SERVER_PORT: '3000', BEARER_TOKEN_EERC20: 'test-token' }
                 },
                 {
                     name: 'production environment',

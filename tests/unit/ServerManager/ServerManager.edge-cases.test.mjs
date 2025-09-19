@@ -237,7 +237,8 @@ describe( 'ServerManager Edge Cases and Error Handling', () => {
             } )
             
             expect( mcpAuthMiddlewareConfig ).toBeDefined()
-            expect( mcpAuthMiddlewareConfig.routes ).toEqual( {} )
+            expect( mcpAuthMiddlewareConfig.staticBearer ).toBeUndefined()
+            expect( mcpAuthMiddlewareConfig.oauth21 ).toBeUndefined()
             expect( mcpAuthMiddlewareConfig.silent ).toBe( true )
         } )
 

@@ -245,7 +245,7 @@ describe( 'CommunityServer HTML Route Registration', () => {
                 { 
                     stageType: 'test', 
                     expectedRootUrl: 'http://localhost',
-                    expectedServerPort: '8080'
+                    expectedServerPort: '3000'
                 },
                 { 
                     stageType: 'development', 

@@ -10,7 +10,7 @@ class TestServerHelper {
         const testEnvObject = {
             'SERVER_URL': 'http://localhost',
             'SERVER_PORT': port.toString(),
-            'BEARER_TOKEN_EERC20': 'test-clean-token'
+            'BEARER_TOKEN_MASTER': 'test-clean-token'
         }
 
         const testServerConfig = {
@@ -66,9 +66,9 @@ class TestServerHelper {
 // If called directly, start server and wait for SIGTERM
 if( import.meta.url === `file://${process.argv[1]}` ) {
     // Get port from command line arguments or environment
-    const portArg = process.argv[2] ? parseInt(process.argv[2]) : 
-                   process.env.SERVER_PORT ? parseInt(process.env.SERVER_PORT) : 
-                   8080
+    const portArg = process.argv[2] ? parseInt(process.argv[2]) :
+                   process.env.SERVER_PORT ? parseInt(process.env.SERVER_PORT) :
+                   3000
     
     const { port, bearerToken, endpoint } = await TestServerHelper.startTestServer( { port: portArg } )
     console.log( `Test server running on port ${port}` )

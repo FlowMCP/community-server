@@ -45,7 +45,7 @@ parent-folder/
 ```bash
 # Server Configuration
 SERVER_URL=http://localhost
-SERVER_PORT=8080
+SERVER_PORT=3000
 
 # Webhook Configuration  
 WEBHOOK_SECRET=your-webhook-secret

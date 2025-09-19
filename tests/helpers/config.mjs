@@ -7,11 +7,11 @@ const testEnvPath = './.community.env.example'
 const defaultStageType = 'development'
 
 const testEnvObject = {
-    'BEARER_TOKEN_EERC20': 'test-eerc20-token',
-    'BEARER_TOKEN_INSEIGHT': 'test-inseight-token',
-    'AUTH0_DOMAIN': 'test.auth0.com',
-    'AUTH0_CLIENT_ID': 'test-client-id',
-    'AUTH0_CLIENT_SECRET': 'test-client-secret'
+    'BEARER_TOKEN_MASTER': 'test-master-token',
+    'SCALEKIT_ENVIRONMENT_URL': 'https://test.scalekit.com',
+    'SCALEKIT_MCP_ID': 'test-mcp-id',
+    'SCALEKIT_CLIENT_ID': 'test-scalekit-client-id',
+    'SCALEKIT_CLIENT_SECRET': 'test-scalekit-client-secret'
 }
 
 // Helper function to get complete getMcpAuthMiddlewareConfig parameters
@@ -40,7 +40,7 @@ const testRoutes = [
         'auth': {
             'enabled': true,
             'authType': 'staticBearer',
-            'token': 'BEARER_TOKEN_EERC20'
+            'token': 'BEARER_TOKEN_MASTER'
         },
         'protocol': 'sse'
     },
@@ -50,8 +50,8 @@ const testRoutes = [
         'description': 'Test route for Inseight',
         'auth': {
             'enabled': true,
-            'authType': 'staticBearer', 
-            'token': 'BEARER_TOKEN_INSEIGHT'
+            'authType': 'staticBearer',
+            'token': 'BEARER_TOKEN_MASTER'
         },
         'protocol': 'sse'
     },

@@ -215,8 +215,12 @@ describe( 'CommunityServer CORS Tests', () => {
             }
 
             const mcpAuthMiddlewareConfig = {
-                routes: {
-                    '/test/sse': { authType: 'staticBearer', token: 'test-token' }
+                silent: true,
+                baseUrl: 'http://localhost:3000',
+                forceHttps: false,
+                staticBearer: {
+                    tokenSecret: 'test-token',
+                    attachedRoutes: ['/test/sse']
                 }
             }
 

@@ -306,8 +306,12 @@ describe( 'CommunityServer Error Handling Tests', () => {
             }
 
             const mcpAuthMiddlewareConfig = {
-                routes: {
-                    '/test/sse': { authType: 'staticBearer', token: 'test-token' }
+                silent: true,
+                baseUrl: 'http://localhost:3000',
+                forceHttps: false,
+                staticBearer: {
+                    tokenSecret: 'test-token',
+                    attachedRoutes: ['/test/sse']
                 }
             }
 
@@ -325,7 +329,13 @@ describe( 'CommunityServer Error Handling Tests', () => {
             } )
 
             expect( result ).toBe( true )
-            expect( mockMcpAuthMiddleware.create ).toHaveBeenCalledWith( mcpAuthMiddlewareConfig )
+            expect( mockMcpAuthMiddleware.create ).toHaveBeenCalledWith( {
+                staticBearer: {
+                    tokenSecret: 'test-token',
+                    attachedRoutes: ['/test/sse']
+                },
+                baseUrl: 'http://localhost:3000'
+            } )
             expect( mockApp.use ).toHaveBeenCalled()
         } )
     } )
@@ -514,7 +524,7 @@ describe( 'CommunityServer Error Handling Tests', () => {
             
             mockNet.createServer.mockReturnValue( mockServer )
 
-            const portTests = [ '8080', '9000', '4000' ]
+            const portTests = [ '3000', '9000', '4000' ]
 
             for( const port of portTests ) {
                 jest.clearAllMocks()

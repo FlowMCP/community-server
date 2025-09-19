@@ -5,31 +5,28 @@ import { jest } from '@jest/globals'
 describe('ServerManager - Additional Edge Case Tests', () => {
 
     describe('getMcpAuthMiddlewareConfig() advanced edge cases', () => {
-        test('should handle mixed auth types in single config', () => {
+        test('should handle multiple staticBearer routes in single config', () => {
             const activeRoutes = [
                 {
                     routePath: '/eerc20',
                     auth: {
                         enabled: true,
                         authType: 'staticBearer',
-                        token: 'BEARER_TOKEN_EERC20'
+                        token: 'BEARER_TOKEN_MASTER'
                     }
                 },
                 {
-                    routePath: '/etherscan-ping',
+                    routePath: '/inseight',
                     auth: {
                         enabled: true,
-                        authType: 'oauth21_auth0',
-                        providerUrl: 'https://{{AUTH0_DOMAIN}}',
-                        clientId: '{{AUTH0_CLIENT_ID}}'
+                        authType: 'staticBearer',
+                        token: 'BEARER_TOKEN_MASTER'
                     }
                 }
             ]
 
             const envObject = {
-                'BEARER_TOKEN_EERC20': 'test-bearer-token',
-                'AUTH0_DOMAIN': 'dev-test.auth0.com',
-                'AUTH0_CLIENT_ID': 'test-client-123'
+                'BEARER_TOKEN_MASTER': 'test-bearer-token'
             }
 
             const { mcpAuthMiddlewareConfig } = ServerManager.getMcpAuthMiddlewareConfig({ 
@@ -40,14 +37,12 @@ describe('ServerManager - Additional Edge Case Tests', () => {
                 baseUrl: testBaseUrl
             })
 
-            // Verify both auth types are handled correctly
-            expect(mcpAuthMiddlewareConfig.routes['/eerc20/sse']).toBeDefined()
-            expect(mcpAuthMiddlewareConfig.routes['/eerc20/sse'].authType).toBe('staticBearer')
-            expect(mcpAuthMiddlewareConfig.routes['/eerc20/sse'].token).toBe('test-bearer-token')
-            
-            expect(mcpAuthMiddlewareConfig.routes['/etherscan-ping/sse']).toBeDefined()
-            expect(mcpAuthMiddlewareConfig.routes['/etherscan-ping/sse'].authType).toBe('oauth21_auth0')
-            expect(mcpAuthMiddlewareConfig.routes['/etherscan-ping/sse'].providerUrl).toBe('https://dev-test.auth0.com')
+            // Verify staticBearer config is created correctly
+            expect(mcpAuthMiddlewareConfig.staticBearer).toBeDefined()
+            expect(mcpAuthMiddlewareConfig.staticBearer.tokenSecret).toBe('test-bearer-token')
+            expect(mcpAuthMiddlewareConfig.staticBearer.attachedRoutes).toContain('/eerc20/sse')
+            expect(mcpAuthMiddlewareConfig.staticBearer.attachedRoutes).toContain('/inseight/sse')
+            expect(mcpAuthMiddlewareConfig.staticBearer.attachedRoutes).toHaveLength(2)
         })
 
         test('should handle routes with auth disabled', () => {
@@ -71,8 +66,8 @@ describe('ServerManager - Additional Edge Case Tests', () => {
             })
 
             // Should not include routes with disabled auth
-            expect(mcpAuthMiddlewareConfig.routes['/public-route/sse']).toBeUndefined()
-            expect(Object.keys(mcpAuthMiddlewareConfig.routes)).toHaveLength(0)
+            expect(mcpAuthMiddlewareConfig.staticBearer).toBeUndefined()
+            expect(mcpAuthMiddlewareConfig.oauth21).toBeUndefined()
         })
 
         test('should preserve silent flag configuration', () => {
