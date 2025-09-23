@@ -1,1 +1,0 @@
-import { OAuthMiddlewareTester } from 'mcpAuthMiddleware'

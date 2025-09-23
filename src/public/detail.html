@@ -154,7 +154,7 @@
     <h3>Claude Code Integration</h3>
     <p>Add this MCP server to Claude Code:</p>
     <div class="link-box">
-      <input type="text" id="claude-cmd" value="claude mcp add --transport sse {{SERVICE_NAME}} {{URL}} --header &quot;Authorization:Bearer {{TOKEN}}&quot;" readonly />
+      <input type="text" id="claude-cmd" value="{{CLAUDE_COMMAND}}" readonly />
       <button onclick="copyToClipboard('claude-cmd')">Copy Command</button>
     </div>
 

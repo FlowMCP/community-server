@@ -24,39 +24,38 @@ class CommunityServer {
             app.use( cors( serverConfig.cors.options ) )
         }
         
-        // Create and apply auth middleware if config is provided
-        if( mcpAuthMiddlewareConfig ) {
-            // Debug output for auth config
-            if( !silent && stageType === 'production' ) {
-                console.log( '🔐 Auth Middleware Config (v1.0):' )
-                console.log( '   baseUrl:', mcpAuthMiddlewareConfig.baseUrl )
-                console.log( '   forceHttps:', mcpAuthMiddlewareConfig.forceHttps )
+        // Create and apply auth middlewares if configs are provided
+        if( mcpAuthMiddlewareConfig && mcpAuthMiddlewareConfig.length > 0 ) {
+            // Debug output for auth configs
+            if( !silent ) {
+                console.log( '🔐 Auth Middleware Configs (v1.0):' )
+                console.log( `   Total auth middleware instances: ${mcpAuthMiddlewareConfig.length}` )
+            }
 
-                if( mcpAuthMiddlewareConfig.staticBearer ) {
-                    console.log( '   staticBearer routes:', mcpAuthMiddlewareConfig.staticBearer.attachedRoutes )
-                }
+            // Create and apply each middleware instance
+            for( const middlewareConfig of mcpAuthMiddlewareConfig ) {
+                const { authType, options, attachedRoutes, silent: configSilent } = middlewareConfig
 
-                if( mcpAuthMiddlewareConfig.oauth21 ) {
-                    console.log( '   oauth21 routes:', mcpAuthMiddlewareConfig.oauth21.attachedRoutes )
-                    if( mcpAuthMiddlewareConfig.oauth21.options.resource ) {
-                        console.log( '   oauth21 resource:', mcpAuthMiddlewareConfig.oauth21.options.resource )
+                if( !silent ) {
+                    console.log( `   - ${authType} middleware:` )
+                    console.log( `     Routes: ${attachedRoutes.join( ', ' )}` )
+
+                    if( authType === 'scalekit' && options.resource ) {
+                        console.log( `     Resource: ${options.resource}` )
                     }
                 }
+
+                // Create middleware instance with new API
+                const authMiddleware = await McpAuthMiddleware.create( {
+                    authType,
+                    options,
+                    attachedRoutes,
+                    silent: configSilent || silent
+                } )
+
+                // Apply middleware to Express app
+                app.use( authMiddleware.router() )
             }
-
-            // Create middleware config without top-level properties
-            const middlewareConfig = { ...mcpAuthMiddlewareConfig }
-            delete middlewareConfig.silent
-            delete middlewareConfig.baseUrl
-            delete middlewareConfig.forceHttps
-
-            // Add baseUrl back to the config object
-            if( mcpAuthMiddlewareConfig.baseUrl ) {
-                middlewareConfig.baseUrl = mcpAuthMiddlewareConfig.baseUrl
-            }
-
-            const authMiddleware = await McpAuthMiddleware.create( middlewareConfig )
-            app.use( authMiddleware.router() )
         }
         
         if( stageType === 'production' ) {
@@ -144,17 +143,17 @@ class CommunityServer {
 
         const preparedRoutes = routes
             .map( ( route ) => {
-                const { name, description, routePath, auth } = route
+                const { name, description, routePath, auth, protocol = 'sse' } = route
                 const url = new URL( routePath, serverUrl )
-                const urlSse = url + '/sse'
+                const urlSse = url + `/${protocol}`
                 const bearer = auth?.enabled ? '***' : ''
-                return { name, description, routePath, url, bearer, urlSse }
+                return { name, description, routePath, url, bearer, urlSse, protocol }
             } )
 
         this.#addLandingPage( { app, managerVersion, name, description, preparedRoutes } )
         preparedRoutes
             .forEach( ( route ) => {
-                const { name, description, routePath, urlSse, bearer } = route
+                const { name, description, routePath, urlSse, bearer, protocol } = route
                 const currentRoute = routes.find( r => r.routePath === routePath )
                 const routeSchemas = objectOfSchemaArrays[ routePath ] || []
                 if( !silent ) {
@@ -165,7 +164,7 @@ class CommunityServer {
                         console.log( `   ${i+1}. ${namespace}:${name}` )
                     } )
                 }
-                this.#addLRouteLandingPage( { app, routePath, name, description, urlSse, bearer, currentRoute, routeSchemas } )
+                this.#addLRouteLandingPage( { app, routePath, name, description, urlSse, bearer, currentRoute, routeSchemas, protocol } )
             } )
     }
 
@@ -207,7 +206,7 @@ class CommunityServer {
         })
     }
 
-    static #addLRouteLandingPage({ app, routePath, name, description, urlSse, bearer, currentRoute, routeSchemas = [] } ) {
+    static #addLRouteLandingPage({ app, routePath, name, description, urlSse, bearer, currentRoute, routeSchemas = [], protocol = 'sse' } ) {
         app.get(routePath, (req, res) => {
             try {
                 const filePath = path.join(__dirname, './../public', 'detail.html')
@@ -247,12 +246,30 @@ class CommunityServer {
                 // Extract route name from routePath (e.g. '/lukso' becomes 'lukso')
                 const routeName = routePath.replace( /^\//, '' ).replace( /\//g, '_' )
 
+                // Generate Claude Code command based on auth type
+                const isOAuth = currentRoute?.auth?.authType === 'scalekit' || currentRoute?.auth?.authType?.includes('oauth')
+                const claudeTransport = isOAuth ? 'http' : protocol
+                let claudeCommand = ''
+
+                if( isOAuth ) {
+                    // OAuth routes use http transport and no auth header
+                    claudeCommand = `claude mcp add --transport ${claudeTransport} ${routeName} ${urlSse}`
+                } else if( bearer && bearer !== '' ) {
+                    // Bearer token routes
+                    claudeCommand = `claude mcp add --transport ${claudeTransport} ${routeName} ${urlSse} --header "Authorization:Bearer ${bearer}"`
+                } else {
+                    // Free routes (no auth)
+                    claudeCommand = `claude mcp add --transport ${claudeTransport} ${routeName} ${urlSse}`
+                }
+
                 let html = fs.readFileSync(filePath, 'utf8')
                     .replaceAll('{{HEADLINE}}', name )
                     .replaceAll('{{DESCRIPTION}}', description )
                     .replaceAll('{{URL}}', urlSse )
                     .replaceAll('{{TOKEN}}', bearer )
                     .replaceAll('{{SERVICE_NAME}}', routeName )
+                    .replaceAll('{{PROTOCOL}}', protocol )
+                    .replaceAll('{{CLAUDE_COMMAND}}', claudeCommand )
                     .replaceAll('{{AVAILABLE_ROUTES}}', availableMethodsHtml )
 
                 res.send(html)

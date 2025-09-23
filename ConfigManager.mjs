@@ -65,6 +65,7 @@ class ConfigManager {
         const {
             BEARER_TOKEN_MASTER,
             SCALEKIT_ENVIRONMENT_URL, SCALEKIT_MCP_ID, SCALEKIT_CLIENT_ID, SCALEKIT_CLIENT_SECRET,
+            SCALEKIT_EXPECTED_AUDIENCE, SCALEKIT_PROTECTED_RESOURCE_METADATA,
             SERVER_URL, SERVER_PORT
         } = envObject
 
@@ -82,7 +83,7 @@ class ConfigManager {
             .map( ( routeName ) => {
                 if( routeName === 'getFreeTest' ) { return ConfigManager.getFreeTest() }
                 else if( routeName === 'getBearerTest' ) { return ConfigManager.getBearerTest( { BEARER_TOKEN_MASTER } ) }
-                else if( routeName === 'getScaleKit' ) { return ConfigManager.getScalekit( { SCALEKIT_ENVIRONMENT_URL, SCALEKIT_MCP_ID, SCALEKIT_CLIENT_ID, SCALEKIT_CLIENT_SECRET, BASE_URL, stageType } ) }
+                else if( routeName === 'getScaleKit' ) { return ConfigManager.getScalekit( { SCALEKIT_ENVIRONMENT_URL, SCALEKIT_CLIENT_ID, SCALEKIT_CLIENT_SECRET, SCALEKIT_EXPECTED_AUDIENCE, SCALEKIT_PROTECTED_RESOURCE_METADATA, BASE_URL, stageType } ) }
                 else if( routeName === 'getErc20' ) { return ConfigManager.getErc20( { BEARER_TOKEN_MASTER } ) }
                 else if( routeName === 'getX402' ) { return ConfigManager.getX402() }
                 else if( routeName === 'getLukso' ) { return ConfigManager.getLukso() }
@@ -120,15 +121,15 @@ class ConfigManager {
 
     static async getBearerTest( { BEARER_TOKEN_MASTER } ) {
         return {
-            'routePath': '/bearer-streamable',
+            'routePath': '/bearer',
             'name': 'Bearer Token Test Route',
             'description': 'A test route protected by a static bearer token, using the ping schema.',
             'bearerIsPublic': false,
             'protocol': 'streamable',
             'auth': {
                 'enabled': true,
-                'authType': 'staticBearer',
-                'token': BEARER_TOKEN_MASTER
+                'authType': 'static-bearer',
+                'bearerToken': BEARER_TOKEN_MASTER
             },
             'schemas': async () => {
                 const arrayOfSchemas = []
@@ -147,8 +148,8 @@ class ConfigManager {
             'description': 'This is an experimental server for an encrypted ERC20 schema for the x402 protocol. Further information at: https://github.com/a6b8/backendshield',
             'auth': {
                 'enabled': true,
-                'authType': 'staticBearer',
-                'token': BEARER_TOKEN_MASTER
+                'authType': 'static-bearer',
+                'bearerToken': BEARER_TOKEN_MASTER
             },
             'protocol': 'streamable',
             'schemas': async () => {
@@ -231,8 +232,8 @@ class ConfigManager {
             'description': 'Provides access to the SEI Blockchain for search and redirect functionality.',
             'auth': {
                 'enabled': true,
-                'authType': 'staticBearer',
-                'token': BEARER_TOKEN_MASTER
+                'authType': 'static-bearer',
+                'bearerToken': BEARER_TOKEN_MASTER
             },
             'protocol': 'streamable',
             'schemas': async () => {
@@ -291,24 +292,34 @@ class ConfigManager {
     }
 */
 
-    static async getScalekit( { SCALEKIT_ENVIRONMENT_URL, SCALEKIT_MCP_ID, SCALEKIT_CLIENT_ID, SCALEKIT_CLIENT_SECRET, BASE_URL, stageType } ) {
+    static async getScalekit( {
+        SCALEKIT_ENVIRONMENT_URL,
+        SCALEKIT_CLIENT_ID,
+        SCALEKIT_CLIENT_SECRET,
+        SCALEKIT_EXPECTED_AUDIENCE,
+        SCALEKIT_PROTECTED_RESOURCE_METADATA,
+        BASE_URL,
+        stageType
+    } ) {
+        const routePath = '/scalekit'
         return {
-            'routePath': '/scalekit-streamable',
+            routePath,
             'name': 'ScaleKit Route',
             'description': 'Testing ScaleKit OAuth 2.1 configuration with MCP schemas',
             'bearerIsPublic': false,
             'protocol': 'streamable',
             'auth': {
                 'enabled': true,
-                'authType': 'oauth21_scalekit',
-                'providerUrl': `${SCALEKIT_ENVIRONMENT_URL}`,
-                'mcpId': `${SCALEKIT_MCP_ID}`,
-                'clientId': `${SCALEKIT_CLIENT_ID}`,
-                'clientSecret': `${SCALEKIT_CLIENT_SECRET}`,
-                'resource': ServerManager.normalizeUrlForStage( { url: `${BASE_URL}/scalekit-route`, stageType } ),
-                'resourceDocumentation': ServerManager.normalizeUrlForStage( { url: `${BASE_URL}/scalekit-route/docs`, stageType } ),
-                'scope': 'openid profile mcp:tools mcp:resources:read mcp:resources:write',
-                'authFlow': 'authorization_code'
+                'authType': 'scalekit',
+                'options': {
+                    'providerUrl': SCALEKIT_ENVIRONMENT_URL,
+                    'clientId': SCALEKIT_CLIENT_ID,
+                    'clientSecret': SCALEKIT_CLIENT_SECRET,
+                    'resource': SCALEKIT_EXPECTED_AUDIENCE,
+                    'protectedResourceMetadata': SCALEKIT_PROTECTED_RESOURCE_METADATA,
+                    'toolScopes': {}
+                },
+                'attachedRoutes': [ `${routePath}/streamable` ]
             },
             'schemas': async () => {
                 const arrayOfSchemas = await getArrayOfSchemas( {

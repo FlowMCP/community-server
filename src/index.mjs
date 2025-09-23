@@ -51,6 +51,7 @@ class ServerManager {
 
 
     static getMcpAuthMiddlewareConfig( { activeRoutes, envObject, silent, stageType, baseUrl } ) {
+        // Helper function to resolve environment variables
         function getEnvSecret( { key, envObject } ) {
             let status = false
             let messages = []
@@ -61,127 +62,87 @@ class ServerManager {
             return { status, messages, value: envObject[ key ] }
         }
 
-        const struct = {
-            'status': false,
-            'messages': [],
-            'mcpAuthMiddlewareConfig': {
-                silent,
-                baseUrl: baseUrl,
-                forceHttps: stageType === 'production'
-            }
-        }
+        const middlewareConfigs = []
+        const messages = []
 
-/* 
-        NEU ANLEGEN
-        schaue vorher in ServerManager
-        und lese node_mdoules/mcp-auth-middleware/README.md
-        wie es da gemacht wird
-*/
-
-
-        // Group routes by authType for new v1.0 API structure
-        const authGroups = activeRoutes
-            .filter( ( route ) => {
-                // Skip routes without auth (free routes)
-                if( !route.auth || route.auth === null ) return false
-                // Only process routes with valid auth config
-                if( !route.auth.authType ) return false
-                return true
-            } )
-            .reduce( ( groups, route ) => {
+        // Process each route with auth configuration separately
+        activeRoutes
+            .filter( ( route ) => route.auth && route.auth.enabled && route.auth.authType )
+            .forEach( ( route ) => {
                 const { routePath, auth, protocol = 'sse' } = route
-                const authType = auth.authType
                 const fullRoutePath = routePath + '/' + protocol
 
-                if( !groups[ authType ] ) {
-                    groups[ authType ] = {
-                        routes: [],
-                        config: { ...auth }
-                    }
-                    delete groups[ authType ].config.enabled
-                }
-
-                groups[ authType ].routes.push( fullRoutePath )
-                return groups
-            }, {} )
-
-        // Process staticBearer auth type
-        if( authGroups[ 'staticBearer' ] ) {
-            const { config, routes } = authGroups[ 'staticBearer' ]
-
-            // Check if token is a string env variable name or actual token value
-            let tokenValue = config.token
-            if( typeof config.token === 'string' && config.token.match(/^[A-Z_]+$/) ) {
-                // Looks like an env variable name, try to get from envObject
-                const { status, messages, value } = getEnvSecret( { key: config.token, envObject } )
-                if( !status ) {
-                    struct['messages'] = struct['messages'].concat( messages )
-                    tokenValue = null
-                } else {
-                    tokenValue = value
-                }
-            }
-
-            if( tokenValue ) {
-                struct['mcpAuthMiddlewareConfig']['staticBearer'] = {
-                    tokenSecret: tokenValue,
-                    attachedRoutes: routes
-                }
-            }
-        }
-
-        // Process oauth21_scalekit auth type
-        if( authGroups[ 'oauth21_scalekit' ] ) {
-            const { config, routes } = authGroups[ 'oauth21_scalekit' ]
-
-            const processedOptions = Object
-                .entries( config )
-                .reduce( ( acc, [ key, value ] ) => {
-                    if( key === 'authType' ) { return acc } // Skip authType in options
-                    if( typeof value !== 'string' ) { acc[ key ] = value; return acc }
-
-                    const regex = /\{\{(.*?)\}\}/
-                    const match = value.match( regex )
-
-                    if( Array.isArray( match ) && match.length >= 2 ) {
-                        const envKey = match[ 1 ].trim()
-                        const { status, messages, value: envValue } = getEnvSecret( { key: envKey, envObject } )
+                // Create config based on authType following new API structure
+                if( auth.authType === 'static-bearer' ) {
+                    // Resolve bearer token from env if needed
+                    let bearerToken = auth.bearerToken
+                    if( typeof bearerToken === 'string' && bearerToken.match( /^[A-Z_]+$/ ) ) {
+                        const { status, messages: tokenMessages, value } = getEnvSecret( { key: bearerToken, envObject } )
                         if( !status ) {
-                            struct['messages'] = struct['messages'].concat( messages )
-                            return acc
+                            messages.push( ...tokenMessages )
+                            return
                         }
-                        if( !envValue ) {
-                            struct['messages'].push( `Missing environment variable: ${envKey}` )
-                            return acc
-                        }
-                        acc[ key ] = value.replace( `{{${envKey}}}`, envValue )
-                    } else {
-                        acc[ key ] = value
+                        bearerToken = value
                     }
-                    return acc
-                }, {} )
 
-            if( struct['messages'].length === 0 ) {
-                struct['mcpAuthMiddlewareConfig']['oauth21'] = {
-                    authType: 'oauth21_scalekit',
-                    attachedRoutes: routes,
-                    options: processedOptions
+                    middlewareConfigs.push( {
+                        authType: 'static-bearer',
+                        options: { bearerToken },
+                        attachedRoutes: [ fullRoutePath ],
+                        silent
+                    } )
+                } else if( auth.authType === 'scalekit' ) {
+                    // Process ScaleKit configuration
+                    const processedOptions = {}
+
+                    // Process all options, resolving env variables where needed
+                    Object.entries( auth.options || {} ).forEach( ( [ key, value ] ) => {
+                        if( typeof value === 'string' ) {
+                            const regex = /\{\{(.*?)\}\}/
+                            const match = value.match( regex )
+
+                            if( match ) {
+                                const envKey = match[ 1 ].trim()
+                                const { status, messages: envMessages, value: envValue } = getEnvSecret( { key: envKey, envObject } )
+                                if( !status ) {
+                                    messages.push( ...envMessages )
+                                    return
+                                }
+
+                                // Don't parse protectedResourceMetadata - ScaleKit expects it as JSON string
+                                processedOptions[ key ] = value.replace( `{{${envKey}}}`, envValue )
+                            } else {
+                                processedOptions[ key ] = value
+                            }
+                        } else {
+                            processedOptions[ key ] = value
+                        }
+                    } )
+
+                    // Only add if we successfully processed all options
+                    if( messages.length === 0 ) {
+                        middlewareConfigs.push( {
+                            authType: 'scalekit',
+                            options: processedOptions,
+                            attachedRoutes: auth.attachedRoutes || [ fullRoutePath ],
+                            silent
+                        } )
+                    }
+                } else if( auth.authType === 'free-route' ) {
+                    // Free route doesn't need middleware
+                    return
+                } else {
+                    messages.push( `Unknown auth type: ${auth.authType} for route ${routePath}` )
                 }
-            }
+            } )
+
+        // Check for errors
+        if( messages.length > 0 ) {
+            throw new Error( `MCP Auth configuration errors:\n${messages.join( "\n" )}` )
         }
 
-        // Handle deprecated oauth21_auth0
-        if( authGroups[ 'oauth21_auth0' ] ) {
-            struct['messages'].push( 'oauth21_auth0 is no longer supported in mcpAuthMiddleware v1.0. Please migrate to oauth21_scalekit.' )
-        }
-
-        struct['status'] = struct['messages'].length === 0
-        if( !struct['status'] ) {
-            throw new Error( `MCP Auth configuration errors: ${ struct['messages'].join( "\n" ) }` )
-        }
-        const { mcpAuthMiddlewareConfig } = struct
-
-        return { mcpAuthMiddlewareConfig }
+        // Return array of middleware configs for new API
+        return { mcpAuthMiddlewareConfig: middlewareConfigs }
     }
 
 
