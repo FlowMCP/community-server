@@ -18,7 +18,7 @@
     "cors": "^2.8.5",
     "ethers": "^6.14.4",
     "flowmcpServers": "github:flowmcp/flowMCP-servers#e5b13742c264ccb170077d2c9b0616da974a63b6",
-    "mcpAuthMiddleware": "github:flowmcp/mcp-auth-middleware#ce3fa0ee44ddd645e255f14d7aa88e1e6a4b7ea5",
+    "mcpAuthMiddleware": "github:flowmcp/mcp-auth-middleware#8a09c8e1bf70bf9af1d417447e3f45a70246552c",
     "moment": "^2.30.1",
     "pinata": "^2.4.8",
     "puppeteer": "^24.22.0",
